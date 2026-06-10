@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@theme {
+  --font-sans: Arial, Helvetica, sans-serif;
+
+  /* Colors */
+  --color-primary: #e60012;
+  --color-signal: #f68d1f;
+  --color-amber: #ecab37;
+  --color-nav-gold: #e48600;
+  
+  --color-canvas: #7a8aba;
+  --color-periwinkle: #8ba1d4;
+  --color-sky: #9fbee7;
+  --color-canvas-soft: #9fbee7;
+  --color-lavender: #acace7;
+  --color-ice: #c0d5e6;
+  
+  --color-chrome-indigo: #3d4f97;
+  --color-muted-indigo: #60619c;
+  --color-platinum: #dedede;
+  --color-surface: #ffffff;
+  
+  --color-carbon: #21242e;
+  --color-ink: #21242e;
+  --color-ink-soft: #3d4f97;
+  --color-on-primary: #ffffff;
+  --color-error: #e60012;
+
+  --color-systems-teal: #206479;
+  --color-games-red: #a7282b;
+
+  /* Shadcn overrides */
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-ink);
+  --color-border: var(--color-chrome-indigo);
+  --color-card: var(--color-platinum);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-muted: var(--color-platinum);
+  --color-muted-foreground: var(--color-muted-indigo);
+  --color-accent: var(--color-sky);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-error);
+  --color-destructive-foreground: var(--color-on-primary);
+  --color-input: var(--color-chrome-indigo);
+  --color-ring: var(--color-nav-gold);
+
+  --radius-lg: 10px;
+  --radius-md: 6px;
+  --radius-sm: 4px;
+  --radius-xs: 2px;
+  --radius-none: 0px;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    /* Reset from previous dark mode */
+    color-scheme: light;
+  }
+}
+
+@layer components {
+  /* Bevel utilities */
+  .beveled-plate {
+    @apply bg-canvas border-t border-l border-white/40 border-r border-b border-r-chrome-indigo border-b-chrome-indigo;
+  }
+
+  .beveled-raised {
+    @apply bg-periwinkle border-t border-l border-white/60 border-r border-b border-r-chrome-indigo border-b-chrome-indigo;
+  }
+
+  .beveled-chip {
+    @apply border-t border-white/60 border-b-2 border-b-black/20 active:border-t-black/20 active:border-b-white/20 active:translate-y-px;
+  }
+
+  .ui-label {
+    @apply uppercase font-bold tracking-[0.5px] text-[11px];
+  }
+
+  .nav-link {
+    @apply uppercase font-bold tracking-[0.5px] text-[13px];
+  }
+
+  .halftone-bg {
+    background-color: var(--color-carbon);
+    background-image: radial-gradient(var(--color-chrome-indigo) 15%, transparent 16%), radial-gradient(var(--color-chrome-indigo) 15%, transparent 16%);
+    background-size: 4px 4px;
+    background-position: 0 0, 2px 2px;
+  }
+}
