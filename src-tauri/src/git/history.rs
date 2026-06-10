@@ -10,7 +10,7 @@ pub struct CommitInfo {
     pub timestamp: i64,
 }
 
-pub fn get_history(repo: &Repository, limit: usize) -> Result<Vec<CommitInfo>, git2::Error> {
+pub fn get_history(repo: &Repository, limit: usize, search_query: Option<String>) -> Result<Vec<CommitInfo>, git2::Error> {
     let mut revwalk = repo.revwalk()?;
     
     // Sort by time
@@ -27,18 +27,33 @@ pub fn get_history(repo: &Repository, limit: usize) -> Result<Vec<CommitInfo>, g
     }
 
     let mut commits = Vec::new();
+    let query_lower = search_query.unwrap_or_default().to_lowercase();
 
-    for oid_result in revwalk.take(limit) {
+    for oid_result in revwalk {
+        if commits.len() >= limit {
+            break;
+        }
+        
         if let Ok(oid) = oid_result {
             if let Ok(commit) = repo.find_commit(oid) {
                 let author = commit.author();
-                commits.push(CommitInfo {
-                    id: oid.to_string(),
-                    message: commit.message().unwrap_or("").to_string(),
-                    author_name: author.name().unwrap_or("Unknown").to_string(),
-                    author_email: author.email().unwrap_or("Unknown").to_string(),
-                    timestamp: commit.time().seconds(),
-                });
+                let message = commit.message().unwrap_or("").to_string();
+                let author_name = author.name().unwrap_or("Unknown").to_string();
+                let author_email = author.email().unwrap_or("Unknown").to_string();
+                
+                let matches_search = query_lower.is_empty() || 
+                    message.to_lowercase().contains(&query_lower) || 
+                    author_name.to_lowercase().contains(&query_lower);
+
+                if matches_search {
+                    commits.push(CommitInfo {
+                        id: oid.to_string(),
+                        message,
+                        author_name,
+                        author_email,
+                        timestamp: commit.time().seconds(),
+                    });
+                }
             }
         }
     }

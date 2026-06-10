@@ -1,11 +1,10 @@
 use git2::{Repository, Signature};
+use std::fs;
 
 pub fn commit(repo: &Repository, message: &str) -> Result<(), git2::Error> {
     let mut index = repo.index()?;
     let oid = index.write_tree()?;
     let signature = repo.signature().unwrap_or_else(|_| {
-        // TODO: Implement a settings tab to configure the Git signature.
-        // For now, if no global configuration exists, fallback to a dummy user.
         Signature::now("Git Desktop", "git@desktop.local").unwrap()
     });
 
@@ -18,23 +17,45 @@ pub fn commit(repo: &Repository, message: &str) -> Result<(), git2::Error> {
     };
 
     if let Some(parent) = parent_commit {
+        // Check if we are in a MERGE state
+        if repo.state() == git2::RepositoryState::Merge {
+            let repo_path = repo.path();
+            let merge_head_path = repo_path.join("MERGE_HEAD");
+            if let Ok(merge_head_str) = fs::read_to_string(merge_head_path) {
+                if let Ok(merge_oid) = git2::Oid::from_str(merge_head_str.trim()) {
+                    if let Ok(merge_commit) = repo.find_commit(merge_oid) {
+                        repo.commit(
+                            Some("HEAD"),
+                            &signature,
+                            &signature,
+                            message,
+                            &tree,
+                            &[&parent, &merge_commit]
+                        )?;
+                        repo.cleanup_state()?;
+                        return Ok(());
+                    }
+                }
+            }
+        }
+
+        // Standard single-parent commit
         repo.commit(
             Some("HEAD"),
             &signature,
             &signature,
             message,
             &tree,
-            &[&parent],
+            &[&parent]
         )?;
     } else {
-        // Initial commit
         repo.commit(
             Some("HEAD"),
             &signature,
             &signature,
             message,
             &tree,
-            &[],
+            &[]
         )?;
     }
 

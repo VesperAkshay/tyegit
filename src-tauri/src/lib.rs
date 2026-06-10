@@ -32,7 +32,19 @@ pub fn run() {
             commands::switch_branch,
             commands::fetch_remote,
             commands::pull_remote,
-            commands::push_remote
+            commands::push_remote,
+            commands::list_tags,
+            commands::create_tag,
+            commands::delete_tag,
+            commands::list_stashes,
+            commands::stash_save,
+            commands::stash_apply,
+            commands::stash_pop,
+            commands::stash_drop,
+            commands::get_repo_state,
+            commands::merge_branch,
+            commands::abort_merge,
+            commands::get_merge_status
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
