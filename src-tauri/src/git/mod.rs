@@ -6,3 +6,7 @@ pub mod diff;
 pub mod history;
 pub mod branch;
 pub mod network;
+pub mod tags;
+pub mod stash;
+pub mod state;
+pub mod merge;

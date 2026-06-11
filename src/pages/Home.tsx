@@ -4,6 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { FolderGit2, Download, PlusSquare } from "lucide-react";
 import { motion } from "motion/react";
+import HelpModal from "../components/Modals/HelpModal";
 
 interface HomeProps {
   onOpenRepo: (path: string) => void;
@@ -14,6 +15,7 @@ export default function Home({ onOpenRepo }: HomeProps) {
   const [cloneUrl, setCloneUrl] = useState("");
   const [isCloning, setIsCloning] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleOpen = async () => {
     try {
@@ -126,11 +128,16 @@ export default function Home({ onOpenRepo }: HomeProps) {
             <span className="nav-link text-canvas-soft">SETTINGS</span>
           </div>
           <div className="flex gap-2">
-            <button className="bg-amber text-carbon ui-label px-3 py-1 rounded-xs beveled-chip h-6 flex items-center">
+            <button 
+              onClick={() => setShowHelp(true)}
+              className="bg-amber text-carbon ui-label px-3 py-1 rounded-xs beveled-chip h-6 flex items-center shadow-sm hover:brightness-110 active:brightness-95 transition-all"
+            >
               HELP
             </button>
           </div>
         </div>
+
+        {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
         {error && (
           <div className="mt-2 bg-white border border-primary p-2 text-primary font-bold text-xs shadow-sm">

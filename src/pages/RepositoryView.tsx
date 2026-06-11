@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { History } from "lucide-react";
 
-import { FileStatus, CommitInfo, BranchInfo } from "../types";
+import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus } from "../types";
 
 import AuthModal from "../components/Modals/AuthModal";
 import BranchModal from "../components/Modals/BranchModal";
+import TagModal from "../components/Modals/TagModal";
+import MergeModal from "../components/Modals/MergeModal";
 import RepositoryHeader from "../components/Repository/RepositoryHeader";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
@@ -21,6 +23,10 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [branches, setBranches] = useState<BranchInfo[]>([]);
+  const [tags, setTags] = useState<TagInfo[]>([]);
+  const [stashes, setStashes] = useState<StashInfo[]>([]);
+  const [repoState, setRepoState] = useState<RepositoryState>("Clean");
+  const [mergeStatus, setMergeStatus] = useState<MergeStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -42,19 +48,52 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [showNewBranch, setShowNewBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
 
+  // Tag creation state
+  const [showNewTag, setShowNewTag] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [tagMessage, setTagMessage] = useState("");
+
+  // Merge state
+  const [showMergeModal, setShowMergeModal] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [statusRes, branchesRes, historyRes] = await Promise.all([
+      const [statusRes, branchesRes, historyRes, tagsRes, stashesRes, stateRes] = await Promise.all([
         invoke<FileStatus[]>("git_status", { path: repoPath }),
         invoke<BranchInfo[]>("list_branches", { path: repoPath }),
-        invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50 })
+        invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, searchQuery: debouncedQuery }),
+        invoke<TagInfo[]>("list_tags", { path: repoPath }),
+        invoke<StashInfo[]>("list_stashes", { path: repoPath }),
+        invoke<RepositoryState>("get_repo_state", { path: repoPath })
       ]);
       
       setStatuses(statusRes);
       setBranches(branchesRes);
       setCommits(historyRes);
+      setTags(tagsRes);
+      setStashes(stashesRes);
+      setRepoState(stateRes);
+      
+      if (stateRes === "Merge") {
+        const mStatus = await invoke<MergeStatus>("get_merge_status", { path: repoPath });
+        setMergeStatus(mStatus);
+      } else {
+        setMergeStatus(null);
+      }
       
       if (selectedFile) {
         const stillExists = statusRes.find(s => s.file_path === selectedFile.path && 
@@ -73,7 +112,7 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
 
   useEffect(() => {
     loadData();
-  }, [repoPath]);
+  }, [repoPath, debouncedQuery]);
 
   useEffect(() => {
     const fetchDiff = async () => {
@@ -141,6 +180,58 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
     } catch (err) { setError(err as string); } finally { setCommitting(false); }
   };
 
+  // Merge Actions
+  const handleMergeBranch = async (branchName: string) => {
+    try {
+      setLoading(true);
+      await invoke("merge_branch", { path: repoPath, branchName });
+      setShowMergeModal(false);
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  const handleAbortMerge = async () => {
+    try {
+      setLoading(true);
+      await invoke("abort_merge", { path: repoPath });
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  // Stash Actions
+  const handleStash = async () => {
+    try {
+      setLoading(true);
+      await invoke("stash_save", { path: repoPath, message: commitMessage.trim() || undefined });
+      setCommitMessage("");
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  const handleStashApply = async (index: number) => {
+    try {
+      setLoading(true);
+      await invoke("stash_apply", { path: repoPath, index });
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  const handleStashPop = async (index: number) => {
+    try {
+      setLoading(true);
+      await invoke("stash_pop", { path: repoPath, index });
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  const handleStashDrop = async (index: number) => {
+    try {
+      setLoading(true);
+      await invoke("stash_drop", { path: repoPath, index });
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
   // Branch Actions
   const handleSwitchBranch = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const target = e.target.value;
@@ -164,6 +255,34 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       await invoke("switch_branch", { path: repoPath, branchName: newBranchName });
       setShowNewBranch(false);
       setNewBranchName("");
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  // Tag Actions
+  const handleSwitchTag = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const target = e.target.value;
+    e.target.value = ""; // Reset dropdown
+    if (target === "__CREATE_NEW__") {
+      setShowNewTag(true);
+      return;
+    }
+    // Checkout the tag
+    try {
+      setLoading(true);
+      await invoke("checkout_tag", { path: repoPath, tagName: target });
+      await loadData();
+    } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+    try {
+      setLoading(true);
+      await invoke("create_tag", { path: repoPath, tagName: newTagName, message: tagMessage });
+      setShowNewTag(false);
+      setNewTagName("");
+      setTagMessage("");
       await loadData();
     } catch (err) { setError(err as string); setLoading(false); }
   };
@@ -217,11 +336,26 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
         />
       )}
 
+      {showNewTag && (
+        <TagModal 
+          newTagName={newTagName} setNewTagName={setNewTagName} 
+          tagMessage={tagMessage} setTagMessage={setTagMessage}
+          onCancel={() => setShowNewTag(false)} onCreate={handleCreateTag} 
+        />
+      )}
+
+      {showMergeModal && (
+        <MergeModal 
+          branches={branches} currentBranch={currentBranch} 
+          onCancel={() => setShowMergeModal(false)} onMerge={handleMergeBranch} 
+        />
+      )}
+
       <div className="w-full max-w-6xl flex flex-col">
         <RepositoryHeader 
-          onClose={onClose} branches={branches} currentBranch={currentBranch}
-          onSwitchBranch={handleSwitchBranch} onNetworkAction={handleNetworkAction}
-          onRefresh={loadData} syncing={syncing} loading={loading}
+          onClose={onClose} branches={branches} tags={tags} currentBranch={currentBranch}
+          onSwitchBranch={handleSwitchBranch} onSwitchTag={handleSwitchTag} onNetworkAction={handleNetworkAction}
+          onRefresh={loadData} onMergeClick={() => setShowMergeModal(true)} syncing={syncing} loading={loading}
         />
 
         {error && <div className="bg-primary text-white text-xs font-bold p-2 mb-2 border-2 border-carbon shadow-[2px_2px_0px_rgba(33,36,46,1)]">{error}</div>}
@@ -249,15 +383,23 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
           <div className="w-full md:w-80 flex flex-col gap-2 h-full">
             {activeTab === "status" ? (
               <StatusPanel 
-                stagedFiles={stagedFiles} unstagedFiles={unstagedFiles} loading={loading}
+                stagedFiles={stagedFiles} unstagedFiles={unstagedFiles} stashes={stashes} 
+                repoState={repoState} mergeStatus={mergeStatus}
                 selectedFile={selectedFile} onSelectFile={setSelectedFile}
                 onStage={handleStage} onUnstage={handleUnstage}
                 onStageAll={handleStageAll} onUnstageAll={handleUnstageAll}
                 commitMessage={commitMessage} setCommitMessage={setCommitMessage}
                 onCommit={handleCommit} committing={committing}
+                onStash={handleStash} onStashApply={handleStashApply} 
+                onStashPop={handleStashPop} onStashDrop={handleStashDrop}
+                onAbortMerge={handleAbortMerge}
               />
             ) : (
-              <HistoryPanel commits={commits} />
+              <HistoryPanel 
+                commits={commits} 
+                searchQuery={searchQuery} 
+                setSearchQuery={setSearchQuery} 
+              />
             )}
           </div>
 
