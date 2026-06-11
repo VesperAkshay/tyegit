@@ -1,5 +1,5 @@
-import { Search } from "lucide-react";
-import { CommitInfo } from "../../types";
+import { Search, Cloud, Target, Tag, CircleDot } from "lucide-react";
+import { CommitInfo, RefInfo } from "../../types";
 import CommitGraph from "./CommitGraph";
 
 interface HistoryPanelProps {
@@ -10,6 +10,41 @@ interface HistoryPanelProps {
   onSelectCommit?: (commitId: string) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
+}
+
+function renderRefBadge(ref: RefInfo) {
+  switch (ref.ref_type) {
+    case "RemoteBranch":
+      return (
+        <span key={ref.name} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-nav-gold text-white text-[9px] font-bold shadow-sm shrink-0 whitespace-nowrap">
+          <Cloud className="w-2.5 h-2.5" />
+          {ref.name}
+        </span>
+      );
+    case "LocalBranch":
+      return (
+        <span key={ref.name} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-chrome-indigo text-white text-[9px] font-bold shadow-sm shrink-0 whitespace-nowrap">
+          <Target className="w-2.5 h-2.5" />
+          {ref.name}
+        </span>
+      );
+    case "Tag":
+      return (
+        <span key={ref.name} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-systems-teal text-white text-[9px] font-bold shadow-sm shrink-0 whitespace-nowrap">
+          <Tag className="w-2.5 h-2.5" />
+          {ref.name}
+        </span>
+      );
+    case "Head":
+      return (
+        <span key={ref.name} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border border-chrome-indigo text-chrome-indigo bg-white text-[9px] font-bold shadow-sm shrink-0 whitespace-nowrap">
+          <CircleDot className="w-2.5 h-2.5" />
+          HEAD
+        </span>
+      );
+    default:
+      return null;
+  }
 }
 
 export default function HistoryPanel({ commits, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore }: HistoryPanelProps) {
@@ -73,10 +108,17 @@ export default function HistoryPanel({ commits, searchQuery, setSearchQuery, sel
                     marginLeft: '8px' 
                   }}
                 >
-                  <div className="text-[11px] font-bold text-ink truncate group-hover:text-chrome-indigo">
-                    {commit.message}
+                  <div className="flex items-center gap-1.5 mb-1 overflow-hidden pr-2">
+                    <div className="text-[11px] font-bold text-ink truncate group-hover:text-chrome-indigo shrink">
+                      {commit.message}
+                    </div>
+                    {commit.refs && commit.refs.length > 0 && (
+                      <div className="flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar">
+                        {commit.refs.map(r => renderRefBadge(r))}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between items-center mt-1">
+                  <div className="flex justify-between items-center mt-0.5">
                     <span className="text-[9px] font-bold text-ink-soft bg-surface px-1 truncate max-w-[120px]">{commit.author_name}</span>
                     <span className="text-[9px] text-ink-soft font-mono">{commit.id.substring(0, 7)}</span>
                   </div>

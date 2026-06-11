@@ -373,3 +373,13 @@ pub fn get_merge_status(path: String) -> Result<crate::git::merge::MergeStatus, 
         Err(e) => Err(format!("Failed to open repository: {}", e.message())),
     }
 }
+
+#[tauri::command]
+pub async fn start_device_flow(client_id: String) -> Result<crate::git::auth::DeviceCodeResponse, String> {
+    crate::git::auth::start_device_flow(&client_id).await
+}
+
+#[tauri::command]
+pub async fn poll_device_flow(client_id: String, device_code: String) -> Result<crate::git::auth::AccessTokenResponse, String> {
+    crate::git::auth::poll_device_flow(&client_id, &device_code).await
+}

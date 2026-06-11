@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 PRD.md 
-TDD.md 
+TDD.md
+.env
+

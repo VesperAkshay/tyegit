@@ -47,7 +47,9 @@ pub fn run() {
             commands::get_repo_state,
             commands::merge_branch,
             commands::abort_merge,
-            commands::get_merge_status
+            commands::get_merge_status,
+            commands::start_device_flow,
+            commands::poll_device_flow
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

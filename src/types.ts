@@ -46,6 +46,13 @@ export interface CommitDetails {
   files_changed: FileDiffSummary[];
 }
 
+export type RefType = "LocalBranch" | "RemoteBranch" | "Tag" | "Head";
+
+export interface RefInfo {
+  name: string;
+  ref_type: RefType;
+}
+
 export interface CommitInfo {
   id: string;
   message: string;
@@ -53,6 +60,7 @@ export interface CommitInfo {
   author_email: string;
   timestamp: number;
   parents: string[];
+  refs: RefInfo[];
 }
 
 export interface BranchInfo {

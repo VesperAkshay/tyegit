@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { History } from "lucide-react";
 
@@ -42,6 +42,8 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
   const [commitDetails, setCommitDetails] = useState<CommitDetails | null>(null);
   const [selectedCommitFile, setSelectedCommitFile] = useState<string | null>(null);
+  const [commitDiffText, setCommitDiffText] = useState<string | null>(null);
+  const [commitDiffLoading, setCommitDiffLoading] = useState(false);
 
   // Auth / Network state
   const [pat, setPat] = useState("");
@@ -66,6 +68,7 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [historyOffset, setHistoryOffset] = useState(0);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  const loadingMoreHistory = useRef(false);
 
   // Debounce search query
   useEffect(() => {
@@ -116,13 +119,14 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       setError(err as string);
     } finally {
       setLoading(false);
+      loadingMoreHistory.current = false;
     }
   };
 
   const loadMoreHistory = async () => {
-    if (!hasMoreHistory || loading) return;
+    if (!hasMoreHistory || loading || loadingMoreHistory.current) return;
     try {
-      setLoading(true);
+      loadingMoreHistory.current = true;
       const nextOffset = historyOffset + 50;
       const historyRes = await invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: nextOffset, searchQuery: debouncedQuery });
       if (historyRes.length < 50) {
@@ -133,12 +137,20 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
     } catch (err) {
       setError(err as string);
     } finally {
-      setLoading(false);
+      loadingMoreHistory.current = false;
     }
   };
 
   useEffect(() => {
     loadData();
+  }, [repoPath, debouncedQuery]);
+
+  useEffect(() => {
+    // Reset selected commit state when changing repo or searching
+    setSelectedCommitId(null);
+    setCommitDetails(null);
+    setSelectedCommitFile(null);
+    setCommitDiffText(null);
   }, [repoPath, debouncedQuery]);
 
   useEffect(() => {
@@ -262,36 +274,36 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   // Commit Details Actions
   const handleSelectCommit = async (commitId: string) => {
     setSelectedCommitId(commitId);
-    setDiffLoading(true);
+    setCommitDiffLoading(true);
     setCommitDetails(null);
     setSelectedCommitFile(null);
-    setDiffText(null);
+    setCommitDiffText(null);
     try {
       const details = await invoke<CommitDetails>("get_commit_details", { path: repoPath, commitId });
       setCommitDetails(details);
     } catch (err) {
       setError(err as string);
     } finally {
-      setDiffLoading(false);
+      setCommitDiffLoading(false);
     }
   };
 
   const handleSelectCommitFile = async (filePath: string) => {
     if (!selectedCommitId) return;
     setSelectedCommitFile(filePath);
-    setDiffLoading(true);
-    setDiffText(null);
+    setCommitDiffLoading(true);
+    setCommitDiffText(null);
     try {
       const diff = await invoke<string>("get_commit_file_diff", { 
         path: repoPath, 
         commitId: selectedCommitId, 
         filePath 
       });
-      setDiffText(diff);
+      setCommitDiffText(diff);
     } catch (err) {
       setError(err as string);
     } finally {
-      setDiffLoading(false);
+      setCommitDiffLoading(false);
     }
   };
 
@@ -473,7 +485,8 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
           {/* Right Rail */}
           <DiffViewer 
             activeTab={activeTab} selectedFile={selectedFile} 
-            diffLoading={diffLoading} diffText={diffText} 
+            diffLoading={activeTab === "status" ? diffLoading : commitDiffLoading} 
+            diffText={activeTab === "status" ? diffText : commitDiffText} 
             commitDetails={commitDetails}
             selectedCommitFile={selectedCommitFile}
             onSelectCommitFile={handleSelectCommitFile}
