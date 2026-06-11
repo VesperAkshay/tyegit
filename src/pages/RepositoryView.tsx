@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { History } from "lucide-react";
 
-import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus } from "../types";
+import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails } from "../types";
 
 import AuthModal from "../components/Modals/AuthModal";
 import BranchModal from "../components/Modals/BranchModal";
@@ -38,6 +38,11 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [diffText, setDiffText] = useState<string | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
 
+  // Commit Details state
+  const [selectedCommitId, setSelectedCommitId] = useState<string | null>(null);
+  const [commitDetails, setCommitDetails] = useState<CommitDetails | null>(null);
+  const [selectedCommitFile, setSelectedCommitFile] = useState<string | null>(null);
+
   // Auth / Network state
   const [pat, setPat] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -59,6 +64,8 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
 
   // Debounce search query
   useEffect(() => {
@@ -75,7 +82,7 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       const [statusRes, branchesRes, historyRes, tagsRes, stashesRes, stateRes] = await Promise.all([
         invoke<FileStatus[]>("git_status", { path: repoPath }),
         invoke<BranchInfo[]>("list_branches", { path: repoPath }),
-        invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, searchQuery: debouncedQuery }),
+        invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: 0, searchQuery: debouncedQuery }),
         invoke<TagInfo[]>("list_tags", { path: repoPath }),
         invoke<StashInfo[]>("list_stashes", { path: repoPath }),
         invoke<RepositoryState>("get_repo_state", { path: repoPath })
@@ -84,6 +91,8 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       setStatuses(statusRes);
       setBranches(branchesRes);
       setCommits(historyRes);
+      setHistoryOffset(0);
+      setHasMoreHistory(historyRes.length === 50);
       setTags(tagsRes);
       setStashes(stashesRes);
       setRepoState(stateRes);
@@ -103,6 +112,24 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
           setDiffText(null);
         }
       }
+    } catch (err) {
+      setError(err as string);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMoreHistory = async () => {
+    if (!hasMoreHistory || loading) return;
+    try {
+      setLoading(true);
+      const nextOffset = historyOffset + 50;
+      const historyRes = await invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: nextOffset, searchQuery: debouncedQuery });
+      if (historyRes.length < 50) {
+        setHasMoreHistory(false);
+      }
+      setCommits(prev => [...prev, ...historyRes]);
+      setHistoryOffset(nextOffset);
     } catch (err) {
       setError(err as string);
     } finally {
@@ -230,6 +257,42 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       await invoke("stash_drop", { path: repoPath, index });
       await loadData();
     } catch (err) { setError(err as string); setLoading(false); }
+  };
+
+  // Commit Details Actions
+  const handleSelectCommit = async (commitId: string) => {
+    setSelectedCommitId(commitId);
+    setDiffLoading(true);
+    setCommitDetails(null);
+    setSelectedCommitFile(null);
+    setDiffText(null);
+    try {
+      const details = await invoke<CommitDetails>("get_commit_details", { path: repoPath, commitId });
+      setCommitDetails(details);
+    } catch (err) {
+      setError(err as string);
+    } finally {
+      setDiffLoading(false);
+    }
+  };
+
+  const handleSelectCommitFile = async (filePath: string) => {
+    if (!selectedCommitId) return;
+    setSelectedCommitFile(filePath);
+    setDiffLoading(true);
+    setDiffText(null);
+    try {
+      const diff = await invoke<string>("get_commit_file_diff", { 
+        path: repoPath, 
+        commitId: selectedCommitId, 
+        filePath 
+      });
+      setDiffText(diff);
+    } catch (err) {
+      setError(err as string);
+    } finally {
+      setDiffLoading(false);
+    }
   };
 
   // Branch Actions
@@ -399,6 +462,10 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
                 commits={commits} 
                 searchQuery={searchQuery} 
                 setSearchQuery={setSearchQuery} 
+                selectedCommitId={selectedCommitId}
+                onSelectCommit={handleSelectCommit}
+                onLoadMore={loadMoreHistory}
+                hasMore={hasMoreHistory}
               />
             )}
           </div>
@@ -407,6 +474,9 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
           <DiffViewer 
             activeTab={activeTab} selectedFile={selectedFile} 
             diffLoading={diffLoading} diffText={diffText} 
+            commitDetails={commitDetails}
+            selectedCommitFile={selectedCommitFile}
+            onSelectCommitFile={handleSelectCommitFile}
           />
         </div>
       </div>

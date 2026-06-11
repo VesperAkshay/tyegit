@@ -27,3 +27,4 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2.0"
 tauri-plugin-dialog = "2.7.1"
+fuzzy-matcher = "0.3.7"

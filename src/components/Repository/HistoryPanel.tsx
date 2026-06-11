@@ -6,11 +6,24 @@ interface HistoryPanelProps {
   commits: CommitInfo[];
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  selectedCommitId?: string | null;
+  onSelectCommit?: (commitId: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 }
 
-export default function HistoryPanel({ commits, searchQuery, setSearchQuery }: HistoryPanelProps) {
+export default function HistoryPanel({ commits, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore }: HistoryPanelProps) {
   // We need a fixed row height so the SVG graph lines up exactly with the HTML list items
   const ROW_HEIGHT = 48; // 48px matches our styling below
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5) {
+      if (hasMore && onLoadMore) {
+        onLoadMore();
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -28,7 +41,10 @@ export default function HistoryPanel({ commits, searchQuery, setSearchQuery }: H
         </div>
       </div>
       
-      <div className="beveled-plate flex-1 overflow-auto bg-platinum p-2 relative flex flex-row items-start">
+      <div 
+        className="beveled-plate flex-1 overflow-auto bg-platinum p-2 relative flex flex-row items-start"
+        onScroll={handleScroll}
+      >
         {commits.length === 0 ? (
           <div className="p-4 w-full text-center text-xs font-bold text-ink-soft">No commits found</div>
         ) : (
@@ -44,7 +60,12 @@ export default function HistoryPanel({ commits, searchQuery, setSearchQuery }: H
               {commits.map((commit) => (
                 <div 
                   key={commit.id} 
-                  className="bg-white border border-chrome-indigo shadow-sm hover:border-nav-gold cursor-pointer transition-colors group flex flex-col justify-center px-2"
+                  className={`border shadow-sm cursor-pointer transition-colors group flex flex-col justify-center px-2 ${
+                    selectedCommitId === commit.id 
+                      ? 'bg-chrome-indigo/10 border-chrome-indigo ring-1 ring-chrome-indigo'
+                      : 'bg-white border-chrome-indigo hover:border-nav-gold'
+                  }`}
+                  onClick={() => onSelectCommit && onSelectCommit(commit.id)}
                   style={{ 
                     height: `${ROW_HEIGHT - 4}px`, // Subtract 4px for margin/gap
                     marginTop: '2px',
@@ -61,6 +82,11 @@ export default function HistoryPanel({ commits, searchQuery, setSearchQuery }: H
                   </div>
                 </div>
               ))}
+              {hasMore && commits.length >= 50 && (
+                <div className="text-center py-4 text-[10px] font-bold text-ink-soft animate-pulse">
+                  LOADING MORE COMMITS...
+                </div>
+              )}
             </div>
           </>
         )}

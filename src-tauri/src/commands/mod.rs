@@ -113,10 +113,34 @@ pub fn get_file_diff(path: String, file_path: String, is_staged: bool) -> Result
 }
 
 #[tauri::command]
-pub fn get_history(path: String, limit: usize, search_query: Option<String>) -> Result<Vec<crate::git::history::CommitInfo>, String> {
+pub fn get_commit_details(path: String, commit_id: String) -> Result<crate::git::diff::CommitDetails, String> {
     let repo_path = PathBuf::from(&path);
     match repository::open_repository(&repo_path) {
-        Ok(repo) => match crate::git::history::get_history(&repo, limit, search_query) {
+        Ok(repo) => match crate::git::diff::get_commit_details(&repo, &commit_id) {
+            Ok(details) => Ok(details),
+            Err(e) => Err(format!("Failed to get commit details: {}", e.message())),
+        },
+        Err(e) => Err(format!("Failed to open repository: {}", e.message())),
+    }
+}
+
+#[tauri::command]
+pub fn get_commit_file_diff(path: String, commit_id: String, file_path: String) -> Result<String, String> {
+    let repo_path = PathBuf::from(&path);
+    match repository::open_repository(&repo_path) {
+        Ok(repo) => match crate::git::diff::get_commit_file_diff(&repo, &commit_id, &file_path) {
+            Ok(diff) => Ok(diff),
+            Err(e) => Err(format!("Failed to get commit file diff: {}", e.message())),
+        },
+        Err(e) => Err(format!("Failed to open repository: {}", e.message())),
+    }
+}
+
+#[tauri::command]
+pub fn get_history(path: String, limit: usize, skip: usize, search_query: Option<String>) -> Result<Vec<crate::git::history::CommitInfo>, String> {
+    let repo_path = PathBuf::from(&path);
+    match repository::open_repository(&repo_path) {
+        Ok(repo) => match crate::git::history::get_history(&repo, limit, skip, search_query) {
             Ok(history) => Ok(history),
             Err(e) => Err(format!("Failed to get history: {}", e.message())),
         },

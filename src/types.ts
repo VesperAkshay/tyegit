@@ -36,6 +36,16 @@ export interface MergeStatus {
   unresolved: number;
 }
 
+export interface FileDiffSummary {
+  file_path: string;
+  status: string;
+}
+
+export interface CommitDetails {
+  info: CommitInfo;
+  files_changed: FileDiffSummary[];
+}
+
 export interface CommitInfo {
   id: string;
   message: string;
