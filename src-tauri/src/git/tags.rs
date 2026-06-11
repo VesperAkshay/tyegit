@@ -14,7 +14,10 @@ pub fn list_tags(repo: &Repository) -> Result<Vec<TagInfo>, git2::Error> {
 
     for name in tag_names.iter().flatten() {
         if let Ok(obj) = repo.revparse_single(name) {
-            let commit_id = obj.id().to_string();
+            let commit_id = match obj.peel_to_commit() {
+                Ok(commit) => commit.id().to_string(),
+                Err(_) => obj.id().to_string(), // fallback
+            };
             let mut message = String::new();
 
             // Try to see if it's an annotated tag
@@ -35,12 +38,26 @@ pub fn list_tags(repo: &Repository) -> Result<Vec<TagInfo>, git2::Error> {
 
 pub fn create_tag(repo: &Repository, tag_name: &str, message: &str) -> Result<(), git2::Error> {
     let obj = repo.revparse_single("HEAD")?;
-    let sig = repo.signature()?;
-    repo.tag(tag_name, &obj, &sig, message, false)?;
+    
+    if message.trim().is_empty() {
+        repo.tag_lightweight(tag_name, &obj, false)?;
+    } else {
+        let sig = repo.signature()?;
+        repo.tag(tag_name, &obj, &sig, message, false)?;
+    }
+    
     Ok(())
 }
 
 pub fn delete_tag(repo: &Repository, tag_name: &str) -> Result<(), git2::Error> {
     repo.tag_delete(tag_name)?;
+    Ok(())
+}
+
+pub fn checkout_tag(repo: &Repository, tag_name: &str) -> Result<(), git2::Error> {
+    let obj = repo.revparse_single(&format!("refs/tags/{}", tag_name))?;
+    let commit = obj.peel_to_commit()?;
+    repo.checkout_tree(&obj, None)?;
+    repo.set_head_detached(commit.id())?;
     Ok(())
 }

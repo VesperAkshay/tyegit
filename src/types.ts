@@ -42,6 +42,7 @@ export interface CommitInfo {
   author_name: string;
   author_email: string;
   timestamp: number;
+  parents: string[];
 }
 
 export interface BranchInfo {

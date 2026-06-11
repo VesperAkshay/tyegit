@@ -9,7 +9,7 @@ interface MergeModalProps {
 }
 
 export default function MergeModal({ branches, currentBranch, onCancel, onMerge }: MergeModalProps) {
-  const otherBranches = branches.filter(b => !b.is_head);
+  const otherBranches = branches.filter(b => !b.is_head && !b.is_remote);
 
   return (
     <div className="absolute inset-0 bg-carbon/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">

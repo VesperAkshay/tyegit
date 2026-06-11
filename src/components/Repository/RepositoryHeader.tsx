@@ -1,4 +1,4 @@
-import { ArrowLeft, GitBranch, Download, GitPullRequest, Upload, RefreshCw, Tag, GitMerge, HelpCircle } from "lucide-react";
+import { ArrowLeft, GitBranch, Download, Upload, RefreshCw, Tag, GitMerge } from "lucide-react";
 import { BranchInfo, TagInfo } from "../../types";
 
 interface RepositoryHeaderProps {
@@ -11,13 +11,12 @@ interface RepositoryHeaderProps {
   onNetworkAction: (action: "push" | "pull" | "fetch") => void;
   onRefresh: () => void;
   onMergeClick: () => void;
-  onHelpClick: () => void;
   syncing: boolean;
   loading: boolean;
 }
 
 export default function RepositoryHeader({
-  onClose, branches, tags, currentBranch, onSwitchBranch, onSwitchTag, onNetworkAction, onRefresh, onMergeClick, onHelpClick, syncing, loading
+  onClose, branches, tags, currentBranch, onSwitchBranch, onSwitchTag, onNetworkAction, onRefresh, onMergeClick, syncing, loading
 }: RepositoryHeaderProps) {
   return (
     <header className="halftone-bg border-2 border-carbon h-14 w-full flex items-center px-4 justify-between shadow-md mb-2 shrink-0">
@@ -33,7 +32,7 @@ export default function RepositoryHeader({
               onChange={onSwitchBranch}
               className="bg-transparent border-none text-xs font-bold text-ink focus:outline-none cursor-pointer"
             >
-              {branches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+              {branches.filter(b => !b.is_remote).map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
               <option disabled>──────────</option>
               <option value="__CREATE_NEW__">+ Create Branch</option>
             </select>
@@ -61,46 +60,35 @@ export default function RepositoryHeader({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className="flex bg-canvas-soft border border-chrome-indigo rounded-none h-8 overflow-hidden">
+        <div className="flex bg-canvas-soft border-2 border-carbon rounded-none overflow-hidden h-8">
           <button 
-            onClick={() => onNetworkAction("fetch")}
-            disabled={syncing}
-            className="px-3 hover:bg-chrome-indigo/10 text-chrome-indigo flex items-center gap-1 transition-colors border-r border-chrome-indigo disabled:opacity-50"
-            title="Fetch"
+            onClick={() => onNetworkAction("fetch")} 
+            disabled={syncing} 
+            className="px-3 hover:bg-chrome-indigo hover:text-white text-ink text-xs font-bold transition-colors border-r-2 border-carbon disabled:opacity-50"
           >
-            <Download className="w-3 h-3" />
+            FETCH
           </button>
           <button 
-            onClick={() => onNetworkAction("pull")}
-            disabled={syncing}
-            className="px-3 hover:bg-chrome-indigo/10 text-chrome-indigo flex items-center gap-1 transition-colors border-r border-chrome-indigo disabled:opacity-50"
-            title="Pull"
+            onClick={() => onNetworkAction("pull")} 
+            disabled={syncing} 
+            className="px-3 hover:bg-chrome-indigo hover:text-white text-ink text-xs font-bold transition-colors border-r-2 border-carbon disabled:opacity-50 flex items-center gap-1"
           >
-            <GitPullRequest className="w-3 h-3" />
+            <Download className="w-3 h-3" /> PULL
           </button>
           <button 
-            onClick={() => onNetworkAction("push")}
-            disabled={syncing}
-            className="px-3 hover:bg-chrome-indigo/10 text-chrome-indigo flex items-center gap-1 transition-colors disabled:opacity-50"
-            title="Push"
+            onClick={() => onNetworkAction("push")} 
+            disabled={syncing} 
+            className="px-3 hover:bg-chrome-indigo hover:text-white text-ink text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1"
           >
-            <Upload className="w-3 h-3" />
+            <Upload className="w-3 h-3" /> PUSH
           </button>
         </div>
         <button 
           onClick={onRefresh}
           disabled={loading}
-          className={`p-1.5 bg-canvas-soft border border-chrome-indigo text-chrome-indigo hover:bg-chrome-indigo hover:text-white transition-colors disabled:opacity-50 ${loading ? 'animate-spin' : ''}`}
-          title="Refresh Repository State"
+          className={`bg-nav-gold text-carbon font-bold px-3 py-1 h-8 text-sm border-2 border-carbon hover:bg-carbon hover:text-nav-gold transition-colors disabled:opacity-50 flex items-center gap-2 ${loading ? 'animate-pulse' : ''}`}
         >
-          <RefreshCw className="w-4 h-4" />
-        </button>
-        <button 
-          onClick={onHelpClick}
-          className="p-1.5 bg-canvas-soft border border-chrome-indigo text-chrome-indigo hover:bg-chrome-indigo hover:text-white transition-colors"
-          title="Help & Documentation"
-        >
-          <HelpCircle className="w-4 h-4" />
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> REFRESH
         </button>
       </div>
     </header>

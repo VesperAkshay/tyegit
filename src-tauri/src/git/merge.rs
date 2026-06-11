@@ -24,7 +24,7 @@ pub fn merge_branch(repo: &Repository, branch_name: &str) -> Result<(), git2::Er
     // or we can allow fast-forward if it's possible. Let's do a proper merge for now to test conflicts.
     let mut merge_opts = MergeOptions::new();
     let mut checkout_opts = CheckoutBuilder::new();
-    checkout_opts.force(); // force checkout of merged files
+    checkout_opts.safe(); // Safe checkout, prevents data loss
     
     repo.merge(&[&fetch_commit], Some(&mut merge_opts), Some(&mut checkout_opts))?;
     
@@ -67,7 +67,8 @@ pub fn abort_merge(repo: &Repository) -> Result<(), git2::Error> {
     let mut checkout_opts = CheckoutBuilder::new();
     checkout_opts.force();
     
-    repo.checkout_tree(commit.as_object(), Some(&mut checkout_opts))?;
+    // Reset index and working tree to HEAD, clearing any conflict markers in the index
+    repo.reset(commit.as_object(), git2::ResetType::Hard, Some(&mut checkout_opts))?;
     repo.cleanup_state()?;
     Ok(())
 }

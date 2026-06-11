@@ -23,17 +23,8 @@ pub fn list_branches(repo: &Repository) -> Result<Vec<BranchInfo>, git2::Error> 
         }
     }
     
-    // Remote branches
-    for branch_res in repo.branches(Some(BranchType::Remote))? {
-        let (branch, _) = branch_res?;
-        if let Ok(Some(name)) = branch.name() {
-            branches.push(BranchInfo {
-                name: name.to_string(),
-                is_head: false,
-                is_remote: true,
-            });
-        }
-    }
+    // Only return local branches to avoid confusing the UI dropdowns
+    // which expect local branches.
 
     Ok(branches)
 }

@@ -8,7 +8,6 @@ import AuthModal from "../components/Modals/AuthModal";
 import BranchModal from "../components/Modals/BranchModal";
 import TagModal from "../components/Modals/TagModal";
 import MergeModal from "../components/Modals/MergeModal";
-import HelpModal from "../components/Modals/HelpModal";
 import RepositoryHeader from "../components/Repository/RepositoryHeader";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
@@ -56,9 +55,6 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
 
   // Merge state
   const [showMergeModal, setShowMergeModal] = useState(false);
-
-  // Help state
-  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -274,7 +270,7 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
     // Checkout the tag
     try {
       setLoading(true);
-      await invoke("switch_branch", { path: repoPath, branchName: target }); // switch_branch works for tags too internally since it uses revparse_single
+      await invoke("checkout_tag", { path: repoPath, tagName: target });
       await loadData();
     } catch (err) { setError(err as string); setLoading(false); }
   };
@@ -355,15 +351,11 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
         />
       )}
 
-      {showHelpModal && (
-        <HelpModal onClose={() => setShowHelpModal(false)} />
-      )}
-
       <div className="w-full max-w-6xl flex flex-col">
         <RepositoryHeader 
           onClose={onClose} branches={branches} tags={tags} currentBranch={currentBranch}
           onSwitchBranch={handleSwitchBranch} onSwitchTag={handleSwitchTag} onNetworkAction={handleNetworkAction}
-          onRefresh={loadData} onMergeClick={() => setShowMergeModal(true)} onHelpClick={() => setShowHelpModal(true)} syncing={syncing} loading={loading}
+          onRefresh={loadData} onMergeClick={() => setShowMergeModal(true)} syncing={syncing} loading={loading}
         />
 
         {error && <div className="bg-primary text-white text-xs font-bold p-2 mb-2 border-2 border-carbon shadow-[2px_2px_0px_rgba(33,36,46,1)]">{error}</div>}

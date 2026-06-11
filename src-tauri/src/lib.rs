@@ -36,6 +36,7 @@ pub fn run() {
             commands::list_tags,
             commands::create_tag,
             commands::delete_tag,
+            commands::checkout_tag,
             commands::list_stashes,
             commands::stash_save,
             commands::stash_apply,

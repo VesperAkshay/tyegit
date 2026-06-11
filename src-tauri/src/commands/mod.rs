@@ -230,6 +230,18 @@ pub fn delete_tag(path: String, tag_name: String) -> Result<(), String> {
         Err(e) => Err(format!("Failed to open repository: {}", e.message())),
     }
 }
+
+#[tauri::command]
+pub fn checkout_tag(path: String, tag_name: String) -> Result<(), String> {
+    let repo_path = PathBuf::from(&path);
+    match repository::open_repository(&repo_path) {
+        Ok(repo) => match crate::git::tags::checkout_tag(&repo, &tag_name) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to checkout tag: {}", e.message())),
+        },
+        Err(e) => Err(format!("Failed to open repository: {}", e.message())),
+    }
+}
 #[tauri::command]
 pub fn list_stashes(path: String) -> Result<Vec<crate::git::stash::StashInfo>, String> {
     let repo_path = PathBuf::from(&path);

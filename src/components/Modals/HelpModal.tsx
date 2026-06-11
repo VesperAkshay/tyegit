@@ -29,50 +29,57 @@ export default function HelpModal({ onClose }: HelpModalProps) {
 
           <div className="flex flex-col gap-3 mt-2">
             
-            {/* Local Status */}
             <div className="bg-white border-l-4 border-systems-teal p-3 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-ink mb-1">
                 <FileText className="w-4 h-4 text-systems-teal" />
-                Local Status & Committing
+                1. Local Status & Commits
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Click the <strong>LOCAL STATUS</strong> tab to see your working tree. Use the <span className="font-mono bg-platinum px-1">+</span> to stage files and <span className="font-mono bg-platinum px-1">-</span> to unstage them. 
-                Type a message in the bottom box and hit <strong>COMMIT</strong> to permanently save the snapshot.
+                The <strong>LOCAL STATUS</strong> tab shows your working tree. Use the <span className="font-mono bg-platinum px-1">+</span> to stage files and <span className="font-mono bg-platinum px-1">-</span> to unstage them. 
+                Write a message in the bottom box and hit <strong>COMMIT</strong> to save the snapshot. You can also use <strong>STAGE ALL</strong> to bulk-add files.
               </p>
             </div>
 
-            {/* Stashing */}
             <div className="bg-white border-l-4 border-nav-gold p-3 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-ink mb-1">
                 <DownloadCloud className="w-4 h-4 text-nav-gold" />
-                Stashing Work
+                2. Stashing Work
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Need to quickly switch branches but have messy uncommitted code? Click <strong>STASH</strong> (next to commit). It squirrels away your files into a temporary stash. Later, click the Cloud icon in the STASHES panel to <strong>Apply</strong> it back!
+                Need to quickly switch branches but have uncommitted code? Click <strong>STASH</strong> (next to commit). It squirrels away your files safely. Click the Cloud icon in the STASHES panel to <strong>Apply</strong>, <strong>Pop</strong>, or <strong>Drop</strong> your saved work!
               </p>
             </div>
 
-            {/* Branching & Merging */}
             <div className="bg-white border-l-4 border-primary p-3 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-ink mb-1">
                 <GitMerge className="w-4 h-4 text-primary" />
-                Merging & Conflicts
+                3. Merging & Conflicts
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Use the top header to switch branches. To pull another branch into your current one, click the <strong>MERGE</strong> button next to it. 
-                If the timelines collide, a massive yellow <strong>MERGE IN PROGRESS</strong> banner will appear. 
-                Files with conflicts will get a red <span className="font-bold text-primary">!</span> badge. Open them in VS Code, fix the code, <strong>Stage (+)</strong> the files here, and hit <strong>Commit</strong> to finish the merge!
+                Use the top header to switch branches. To pull another branch into your current one, click the <strong>MERGE</strong> button. 
+                If timelines collide, a massive yellow <strong>MERGE IN PROGRESS</strong> banner will appear. 
+                Conflicted files will get a red <span className="font-bold text-primary">!</span> badge. Open them in your editor, fix the code, <strong>Stage (+)</strong> them, and hit <strong>COMMIT</strong> to finish the merge! You can also <strong>ABORT MERGE</strong> if needed.
               </p>
             </div>
 
-            {/* Tags */}
             <div className="bg-white border-l-4 border-chrome-indigo p-3 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-ink mb-1">
                 <Tags className="w-4 h-4 text-chrome-indigo" />
-                Tags
+                4. Tags & History
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Want to mark v1.0? Click the Tag dropdown in the top header and select <strong>+ Create New Tag</strong>. You can instantly switch your working directory to any tag by selecting it.
+                Mark releases using the Tag dropdown (<strong>+ Create Tag</strong>). You can checkout any tag by selecting it. 
+                Switch to the <strong>COMMIT HISTORY</strong> tab to search through your entire timeline and click on any commit to view an inline diff of the changes!
+              </p>
+            </div>
+
+            <div className="bg-white border-l-4 border-carbon p-3 shadow-sm">
+              <div className="flex items-center gap-2 font-bold text-ink mb-1">
+                <DownloadCloud className="w-4 h-4 text-carbon" />
+                5. Network Sync
+              </div>
+              <p className="text-xs text-ink-soft leading-relaxed">
+                Use <strong>FETCH</strong>, <strong>PULL</strong>, and <strong>PUSH</strong> in the top right to sync with remote repositories. The app will securely ask for your Personal Access Token when needed.
               </p>
             </div>
 
