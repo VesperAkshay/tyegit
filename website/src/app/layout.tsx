@@ -21,7 +21,7 @@ export default function RootLayout({
           <div className="flex items-center space-x-6 h-full">
             {/* Logo Pill */}
             <div className="bg-white text-brand-primary font-black italic px-3 py-0.5 rounded-full border-2 border-chrome-indigo text-xs flex items-center space-x-2">
-              <img src="/tyegit-logo.png" alt="Git Desktop Logo" className="w-4 h-4 object-contain" />
+              <img src="/tyegit/tyegit-logo.png" alt="Git Desktop Logo" className="w-4 h-4 object-contain" />
               <span>Git Desktop</span>
             </div>
             {/* Primary Nav Links */}
