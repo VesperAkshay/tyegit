@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💡 GitHub Discussions"
+    url: "https://github.com/VesperAkshay/tyegit/discussions"
+    about: "For general questions, sharing ideas, and showcasing projects built with this client."
+  - name: "🛡️ Report a Security Vulnerability"
+    url: "https://github.com/VesperAkshay/tyegit/security/advisories/new"
+    about: "Please report security vulnerabilities privately using the GitHub Security Advisory tool or by emailing the maintainer."
