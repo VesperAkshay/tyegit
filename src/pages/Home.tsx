@@ -1,21 +1,80 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
-import { FolderGit2, Download, PlusSquare } from "lucide-react";
+import { FolderGit2, Download, PlusSquare, Clock, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import HelpModal from "../components/Modals/HelpModal";
 
-interface HomeProps {
-  onOpenRepo: (path: string) => void;
+interface RecentRepo {
+  id: number;
+  path: string;
+  name: string;
+  last_opened: string;
 }
 
-export default function Home({ onOpenRepo }: HomeProps) {
+interface GithubRepository {
+  id: number;
+  name: string;
+  full_name: string;
+  private: boolean;
+  description: string | null;
+  clone_url: string;
+  updated_at: string;
+}
+
+interface HomeProps {
+  onOpenRepo: (path: string) => void;
+  pat: string;
+}
+
+export default function Home({ onOpenRepo, pat }: HomeProps) {
   const [error, setError] = useState<string | null>(null);
   const [cloneUrl, setCloneUrl] = useState("");
   const [isCloning, setIsCloning] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [recentRepos, setRecentRepos] = useState<RecentRepo[]>([]);
+  const [remoteRepos, setRemoteRepos] = useState<GithubRepository[]>([]);
+  const [isCloudLoading, setIsCloudLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadRecentRepos() {
+      try {
+        const repos = await invoke<RecentRepo[]>("get_recent_repositories");
+        setRecentRepos(repos);
+      } catch (err) {
+        console.error("Failed to load recent repos:", err);
+      }
+    }
+    loadRecentRepos();
+  }, []);
+
+  useEffect(() => {
+    if (!pat) return;
+    async function loadRemoteRepos() {
+      try {
+        setIsCloudLoading(true);
+        const repos = await invoke<GithubRepository[]>("list_user_repositories", { token: pat });
+        setRemoteRepos(repos);
+      } catch (err) {
+        console.error("Failed to fetch remote repos", err);
+      } finally {
+        setIsCloudLoading(false);
+      }
+    }
+    loadRemoteRepos();
+  }, [pat]);
+
+  const handleOpenRecent = async (path: string) => {
+    try {
+      setError(null);
+      await invoke("open_repository", { path });
+      onOpenRepo(path);
+    } catch (err: any) {
+      setError(err as string);
+    }
+  };
 
   const handleOpen = async () => {
     try {
@@ -94,6 +153,28 @@ export default function Home({ onOpenRepo }: HomeProps) {
     }
   };
 
+  const handleCloudClone = async (repo: GithubRepository) => {
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: `Select Destination for ${repo.name}`,
+      });
+
+      if (selected) {
+        setIsCloning(true);
+        const destPath = await join(selected as string, repo.name);
+        await invoke("clone_repository", { url: repo.clone_url, path: destPath });
+        await invoke("open_repository", { path: destPath });
+        onOpenRepo(destPath);
+      }
+    } catch (err: any) {
+      setError(err as string);
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-canvas font-sans flex flex-col items-center p-4 sm:p-8">
       {/* Masthead */}
@@ -151,6 +232,37 @@ export default function Home({ onOpenRepo }: HomeProps) {
           {/* Main Action Column */}
           <div className="flex-2 flex flex-col gap-4 w-full md:w-2/3">
             
+            {/* Recent Repositories Section */}
+            {recentRepos.length > 0 && (
+              <>
+                <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
+                  <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo">
+                    <span className="ui-label text-ink">RECENT REPOSITORIES</span>
+                  </div>
+                </div>
+                <div className="beveled-raised p-0 flex flex-col max-h-[300px] overflow-y-auto">
+                  {recentRepos.map((repo, idx) => (
+                    <div 
+                      key={repo.id}
+                      onClick={() => handleOpenRecent(repo.path)}
+                      className={`flex items-center justify-between p-3 cursor-pointer hover:bg-chrome-indigo/10 active:bg-chrome-indigo/20 transition-colors ${idx !== recentRepos.length - 1 ? 'border-b border-chrome-indigo/20' : ''}`}
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="bg-chrome-indigo/10 p-1.5 rounded-sm">
+                          <Clock className="w-4 h-4 text-chrome-indigo" />
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-sm font-bold text-ink truncate">{repo.name}</span>
+                          <span className="text-[10px] text-ink-soft truncate font-mono">{repo.path}</span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-ink-soft opacity-50" />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
             {/* Open Existing Section */}
             <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
               <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo">
@@ -203,6 +315,43 @@ export default function Home({ onOpenRepo }: HomeProps) {
           {/* Right Rail: Clone Section & Info */}
           <div className="w-full md:w-1/3 flex flex-col gap-4">
             
+            {/* GitHub Cloud Section */}
+            {pat && (
+              <>
+                <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
+                  <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo w-full">
+                    <span className="ui-label text-ink flex items-center gap-2">
+                      <FolderGit2 className="w-3 h-3 text-nav-gold" /> GITHUB CLOUD
+                    </span>
+                  </div>
+                </div>
+                <div className="beveled-raised p-0 flex flex-col max-h-[300px] overflow-y-auto bg-white mb-2">
+                  {isCloudLoading ? (
+                    <div className="p-4 text-center text-ink-soft text-xs font-bold">Loading repositories...</div>
+                  ) : remoteRepos.length === 0 ? (
+                    <div className="p-4 text-center text-ink-soft text-xs font-bold">No repositories found.</div>
+                  ) : (
+                    remoteRepos.map((r, idx) => (
+                      <div 
+                        key={r.id}
+                        onClick={() => handleCloudClone(r)}
+                        className={`p-3 cursor-pointer hover:bg-chrome-indigo/10 active:bg-chrome-indigo/20 transition-colors ${idx !== remoteRepos.length - 1 ? 'border-b border-chrome-indigo/20' : ''}`}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="text-xs font-bold text-ink truncate flex-1">{r.full_name}</span>
+                          {r.private && <span className="text-[9px] bg-canvas text-ink px-1 border border-chrome-indigo rounded-xs shrink-0 shadow-sm">Private</span>}
+                        </div>
+                        {r.description && <p className="text-[10px] text-ink-soft truncate mt-1">{r.description}</p>}
+                        <div className="mt-2 text-[9px] font-bold text-chrome-indigo flex items-center gap-1 opacity-70">
+                          <Download className="w-3 h-3" /> 1-CLICK CLONE
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+
             {/* Clone Section */}
             <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
               <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo w-full">

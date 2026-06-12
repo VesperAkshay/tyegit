@@ -1,4 +1,4 @@
-import { X, HelpCircle, DownloadCloud, Tags, GitMerge, FileText } from "lucide-react";
+import { X, HelpCircle, DownloadCloud, Tags, GitMerge, FileText, Globe } from "lucide-react";
 
 interface HelpModalProps {
   onClose: () => void;
@@ -24,7 +24,9 @@ export default function HelpModal({ onClose }: HelpModalProps) {
         <div className="p-4 bg-platinum flex flex-col gap-4 overflow-y-auto">
           
           <p className="text-sm text-ink-soft">
-            Welcome to the ultimate tactile Git client. Here is a quick guide to mastering your repository workflows.
+            Welcome to the ultimate tactile Git client. Here is a quick guide to mastering your repository workflows. 
+            <br/><br/>
+            <strong>Pro Tip:</strong> Press <span className="font-mono bg-chrome-indigo text-white px-1.5 py-0.5 rounded">Ctrl+K</span> (or <span className="font-mono bg-chrome-indigo text-white px-1.5 py-0.5 rounded">Cmd+K</span> on Mac) anywhere in the app to open the <strong>Quick Repository Switcher</strong>!
           </p>
 
           <div className="flex flex-col gap-3 mt-2">
@@ -80,6 +82,16 @@ export default function HelpModal({ onClose }: HelpModalProps) {
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Use <strong>FETCH</strong>, <strong>PULL</strong>, and <strong>PUSH</strong> in the top right to sync with remote repositories. The app will securely ask for your Personal Access Token when needed.
+              </p>
+            </div>
+
+            <div className="bg-white border-l-4 border-systems-green p-3 shadow-sm">
+              <div className="flex items-center gap-2 font-bold text-ink mb-1">
+                <Globe className="w-4 h-4 text-systems-green" />
+                6. GitHub Integration
+              </div>
+              <p className="text-xs text-ink-soft leading-relaxed">
+                Click the new <strong>GITHUB</strong> tab to instantly view all open Pull Requests and Issues for the current repository. If you initialize a new local repository, you can use this tab to instantly <strong>Publish</strong> it to your GitHub account! Your commit history also natively displays author avatars and GitHub Actions CI/CD statuses.
               </p>
             </div>
 

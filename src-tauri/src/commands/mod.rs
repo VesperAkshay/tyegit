@@ -1,11 +1,29 @@
+pub mod github;
+
 use crate::git::{repository, status::FileStatus, status::get_status};
 use std::path::PathBuf;
+use tauri::State;
 
 #[tauri::command]
-pub fn open_repository(path: String) -> Result<String, String> {
+pub fn get_recent_repositories(state: State<'_, crate::AppState>) -> Result<Vec<crate::db::sqlite::RecentRepo>, String> {
+    let conn = state.db.lock().unwrap();
+    match crate::db::sqlite::get_recent_repositories(&conn) {
+        Ok(repos) => Ok(repos),
+        Err(e) => Err(format!("Failed to fetch recent repositories: {}", e)),
+    }
+}
+
+#[tauri::command]
+pub fn open_repository(path: String, state: tauri::State<'_, crate::AppState>) -> Result<String, String> {
     let repo_path = PathBuf::from(&path);
     match repository::open_repository(&repo_path) {
-        Ok(_) => Ok(format!("Successfully opened repository at {}", path)),
+        Ok(_) => {
+            if let Some(name) = repo_path.file_name() {
+                let conn = state.db.lock().unwrap();
+                let _ = crate::db::sqlite::add_recent_repository(&conn, &path, &name.to_string_lossy());
+            }
+            Ok(format!("Successfully opened repository at {}", path))
+        },
         Err(e) => Err(format!("Failed to open repository: {}", e.message())),
     }
 }
@@ -23,19 +41,31 @@ pub fn git_status(path: String) -> Result<Vec<FileStatus>, String> {
 }
 
 #[tauri::command]
-pub fn clone_repository(url: String, path: String) -> Result<String, String> {
+pub fn clone_repository(url: String, path: String, state: State<'_, crate::AppState>) -> Result<String, String> {
     let repo_path = PathBuf::from(&path);
     match repository::clone_repository(&url, &repo_path) {
-        Ok(_) => Ok(format!("Successfully cloned repository to {}", path)),
+        Ok(_) => {
+            if let Some(name) = repo_path.file_name() {
+                let conn = state.db.lock().unwrap();
+                let _ = crate::db::sqlite::add_recent_repository(&conn, &path, &name.to_string_lossy());
+            }
+            Ok(format!("Successfully cloned repository to {}", path))
+        },
         Err(e) => Err(format!("Failed to clone repository: {}", e.message())),
     }
 }
 
 #[tauri::command]
-pub fn init_repository(path: String) -> Result<String, String> {
+pub fn init_repository(path: String, state: State<'_, crate::AppState>) -> Result<String, String> {
     let repo_path = PathBuf::from(&path);
     match repository::init_repository(&repo_path) {
-        Ok(_) => Ok(format!("Successfully initialized repository at {}", path)),
+        Ok(_) => {
+            if let Some(name) = repo_path.file_name() {
+                let conn = state.db.lock().unwrap();
+                let _ = crate::db::sqlite::add_recent_repository(&conn, &path, &name.to_string_lossy());
+            }
+            Ok(format!("Successfully initialized repository at {}", path))
+        },
         Err(e) => Err(format!("Failed to init repository: {}", e.message())),
     }
 }
@@ -382,4 +412,51 @@ pub async fn start_device_flow(client_id: String) -> Result<crate::git::auth::De
 #[tauri::command]
 pub async fn poll_device_flow(client_id: String, device_code: String) -> Result<crate::git::auth::AccessTokenResponse, String> {
     crate::git::auth::poll_device_flow(&client_id, &device_code).await
+}
+
+#[tauri::command]
+pub fn get_github_token(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri::Manager;
+    let path = app.path().app_data_dir().unwrap().join("credentials.json");
+    if path.exists() {
+        Ok(Some(std::fs::read_to_string(path).unwrap_or_default()))
+    } else {
+        Ok(None)
+    }
+}
+
+#[tauri::command]
+pub fn save_github_token(app: tauri::AppHandle, token: String) -> Result<(), String> {
+    use tauri::Manager;
+    let app_data_dir = app.path().app_data_dir().unwrap();
+    std::fs::create_dir_all(&app_data_dir).map_err(|e| e.to_string())?;
+    let path = app_data_dir.join("credentials.json");
+    std::fs::write(path, token).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn delete_github_token(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    let path = app.path().app_data_dir().unwrap().join("credentials.json");
+    if path.exists() {
+        std::fs::remove_file(path).map_err(|e| e.to_string())
+    } else {
+        Ok(())
+    }
+}
+
+#[tauri::command]
+pub fn get_remote_url(path: String) -> Result<Option<String>, String> {
+    let repo_path = PathBuf::from(&path);
+    match crate::git::repository::open_repository(&repo_path) {
+        Ok(repo) => {
+            if let Ok(remote) = repo.find_remote("origin") {
+                if let Some(url) = remote.url() {
+                    return Ok(Some(url.to_string()));
+                }
+            }
+            Ok(None)
+        },
+        Err(e) => Err(format!("Failed to open repository: {}", e.message())),
+    }
 }

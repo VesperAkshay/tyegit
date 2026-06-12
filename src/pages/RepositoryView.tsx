@@ -12,14 +12,17 @@ import RepositoryHeader from "../components/Repository/RepositoryHeader";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
 import DiffViewer from "../components/Repository/DiffViewer";
+import GithubPanel from "../components/Repository/GithubPanel";
 
 interface RepositoryViewProps {
   repoPath: string;
   onClose: () => void;
+  pat: string;
+  setPat: (pat: string) => void;
 }
 
-export default function RepositoryView({ repoPath, onClose }: RepositoryViewProps) {
-  const [activeTab, setActiveTab] = useState<"status" | "history">("status");
+export default function RepositoryView({ repoPath, onClose, pat, setPat }: RepositoryViewProps) {
+  const [activeTab, setActiveTab] = useState<"status" | "history" | "github">("status");
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [branches, setBranches] = useState<BranchInfo[]>([]);
@@ -32,6 +35,10 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   
   const [commitMessage, setCommitMessage] = useState("");
   const [committing, setCommitting] = useState(false);
+
+  // GitHub integration state
+  const [ownerRepo, setOwnerRepo] = useState<{owner: string, repo: string} | null>(null);
+  const [avatarsMap, setAvatarsMap] = useState<Record<string, string>>({});
 
   // Diff viewer state
   const [selectedFile, setSelectedFile] = useState<{path: string, isStaged: boolean} | null>(null);
@@ -46,7 +53,6 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   const [commitDiffLoading, setCommitDiffLoading] = useState(false);
 
   // Auth / Network state
-  const [pat, setPat] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"push" | "pull" | "fetch" | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -82,13 +88,14 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
     try {
       setLoading(true);
       setError(null);
-      const [statusRes, branchesRes, historyRes, tagsRes, stashesRes, stateRes] = await Promise.all([
+      const [statusRes, branchesRes, historyRes, tagsRes, stashesRes, stateRes, urlRes] = await Promise.all([
         invoke<FileStatus[]>("git_status", { path: repoPath }),
         invoke<BranchInfo[]>("list_branches", { path: repoPath }),
         invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: 0, searchQuery: debouncedQuery }),
         invoke<TagInfo[]>("list_tags", { path: repoPath }),
         invoke<StashInfo[]>("list_stashes", { path: repoPath }),
-        invoke<RepositoryState>("get_repo_state", { path: repoPath })
+        invoke<RepositoryState>("get_repo_state", { path: repoPath }),
+        invoke<string | null>("get_remote_url", { path: repoPath })
       ]);
       
       setStatuses(statusRes);
@@ -97,6 +104,22 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
       setHistoryOffset(0);
       setHasMoreHistory(historyRes.length === 50);
       setTags(tagsRes);
+      setStashes(stashesRes);
+      setRepoState(stateRes);
+      
+      let newOwnerRepo = null;
+      if (urlRes && urlRes.includes("github.com")) {
+        const parts = urlRes.split(/github\.com[\/:]/);
+        if (parts.length > 1) {
+          const pathParts = parts[1].replace('.git', '').split('/');
+          if (pathParts.length >= 2) {
+            newOwnerRepo = { owner: pathParts[0], repo: pathParts[1] };
+            setOwnerRepo(newOwnerRepo);
+          }
+        }
+      } else {
+        setOwnerRepo(null);
+      }
       setStashes(stashesRes);
       setRepoState(stateRes);
       
@@ -144,6 +167,31 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
   useEffect(() => {
     loadData();
   }, [repoPath, debouncedQuery]);
+
+  // Fetch avatars when ownerRepo changes
+  useEffect(() => {
+    async function fetchAvatars() {
+      if (ownerRepo && pat) {
+        try {
+          const res = await invoke<any[]>("get_commit_avatars", { 
+            owner: ownerRepo.owner, 
+            repo: ownerRepo.repo,
+            token: pat
+          });
+          const newMap: Record<string, string> = {};
+          for (const c of res) {
+            if (c.author && c.author.avatar_url) {
+              newMap[c.sha] = c.author.avatar_url;
+            }
+          }
+          setAvatarsMap(newMap);
+        } catch (err) {
+          console.error("Failed to fetch avatars:", err);
+        }
+      }
+    }
+    fetchAvatars();
+  }, [ownerRepo, pat]);
 
   useEffect(() => {
     // Reset selected commit state when changing repo or searching
@@ -449,48 +497,63 @@ export default function RepositoryView({ repoPath, onClose }: RepositoryViewProp
           >
             <History className="w-3 h-3" /> COMMIT HISTORY
           </button>
+          <button 
+            onClick={() => setActiveTab("github")}
+            className={`px-4 py-1.5 text-xs font-bold border-t-2 border-l-2 border-r-2 rounded-t-sm transition-colors flex items-center gap-1 ${activeTab === "github" ? 'bg-platinum border-chrome-indigo text-ink z-10 -mb-0.5 shadow-[0_-2px_0_0_rgba(61,79,151,1)]' : 'bg-canvas border-transparent text-ink-soft hover:bg-surface hover:text-ink border-b-2 border-b-chrome-indigo'}`}
+          >
+            GITHUB
+          </button>
           <div className="flex-1 border-b-2 border-chrome-indigo"></div>
         </div>
 
-        {/* Main Content Area */}
+          {/* Main Content Area */}
         <div className="flex flex-col md:flex-row gap-2 h-[calc(100vh-180px)]">
-          {/* Left Rail */}
-          <div className="w-full md:w-80 flex flex-col gap-2 h-full">
-            {activeTab === "status" ? (
-              <StatusPanel 
-                stagedFiles={stagedFiles} unstagedFiles={unstagedFiles} stashes={stashes} 
-                repoState={repoState} mergeStatus={mergeStatus}
-                selectedFile={selectedFile} onSelectFile={setSelectedFile}
-                onStage={handleStage} onUnstage={handleUnstage}
-                onStageAll={handleStageAll} onUnstageAll={handleUnstageAll}
-                commitMessage={commitMessage} setCommitMessage={setCommitMessage}
-                onCommit={handleCommit} committing={committing}
-                onStash={handleStash} onStashApply={handleStashApply} 
-                onStashPop={handleStashPop} onStashDrop={handleStashDrop}
-                onAbortMerge={handleAbortMerge}
-              />
-            ) : (
-              <HistoryPanel 
-                commits={commits} 
-                searchQuery={searchQuery} 
-                setSearchQuery={setSearchQuery} 
-                selectedCommitId={selectedCommitId}
-                onSelectCommit={handleSelectCommit}
-                onLoadMore={loadMoreHistory}
-                hasMore={hasMoreHistory}
-              />
-            )}
-          </div>
+          {activeTab === "github" ? (
+            <GithubPanel ownerRepo={ownerRepo} pat={pat} />
+          ) : (
+            <>
+              {/* Left Rail */}
+              <div className="w-full md:w-80 flex flex-col gap-2 h-full">
+                {activeTab === "status" ? (
+                  <StatusPanel 
+                    stagedFiles={stagedFiles} unstagedFiles={unstagedFiles} stashes={stashes} 
+                    repoState={repoState} mergeStatus={mergeStatus}
+                    selectedFile={selectedFile} onSelectFile={setSelectedFile}
+                    onStage={handleStage} onUnstage={handleUnstage}
+                    onStageAll={handleStageAll} onUnstageAll={handleUnstageAll}
+                    commitMessage={commitMessage} setCommitMessage={setCommitMessage}
+                    onCommit={handleCommit} committing={committing}
+                    onStash={handleStash} onStashApply={handleStashApply} 
+                    onStashPop={handleStashPop} onStashDrop={handleStashDrop}
+                    onAbortMerge={handleAbortMerge}
+                  />
+                ) : (
+                  <HistoryPanel 
+                    commits={commits} 
+                    searchQuery={searchQuery} 
+                    setSearchQuery={setSearchQuery} 
+                    selectedCommitId={selectedCommitId}
+                    onSelectCommit={handleSelectCommit}
+                    onLoadMore={loadMoreHistory}
+                    hasMore={hasMoreHistory}
+                    avatarsMap={avatarsMap}
+                    ownerRepo={ownerRepo}
+                    pat={pat}
+                  />
+                )}
+              </div>
 
-          {/* Right Rail */}
-          <DiffViewer 
-            activeTab={activeTab} selectedFile={selectedFile} 
-            diffLoading={activeTab === "status" ? diffLoading : commitDiffLoading} 
-            diffText={activeTab === "status" ? diffText : commitDiffText} 
-            commitDetails={commitDetails}
-            selectedCommitFile={selectedCommitFile}
-            onSelectCommitFile={handleSelectCommitFile}
-          />
+              {/* Right Rail */}
+              <DiffViewer 
+                activeTab={activeTab} selectedFile={selectedFile} 
+                diffLoading={activeTab === "status" ? diffLoading : commitDiffLoading} 
+                diffText={activeTab === "status" ? diffText : commitDiffText} 
+                commitDetails={commitDetails}
+                selectedCommitFile={selectedCommitFile}
+                onSelectCommitFile={handleSelectCommitFile}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

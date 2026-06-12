@@ -20,7 +20,7 @@ export default function Home() {
         
         <div className="relative z-10 flex flex-col items-center text-center">
           <h1 className="hero-wordmark text-5xl md:text-7xl font-black italic tracking-tighter mb-4">
-            Git Desktop v0.2
+            Git Desktop v1.1.0
           </h1>
           <p className="text-ink text-sm md:text-base font-bold bg-white/50 px-4 py-2 rounded-md mb-6 border border-chrome-indigo/20">
             A modern, fast, AI-ready Git client built on Rust & Tauri.
@@ -73,6 +73,24 @@ export default function Home() {
             <h2 className="text-ink font-bold text-lg mb-2">High-Speed Fuzzy Search</h2>
             <p className="text-ink-soft text-sm leading-relaxed">
               Filter commit history in real-time. Type an author name or snippet to locate commits instantly, backed by Rust's blistering performance.
+            </p>
+          </motion.div>
+
+          {/* Feature 3 (New) */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="bg-platinum rounded-md panel-bevel p-4"
+          >
+            <div className="bg-canvas text-white font-bold text-[11px] uppercase px-2 py-1 flex items-center space-x-2 mb-3 -mt-4 -mx-4 rounded-t-md border-b border-chrome-indigo">
+              <GitBranch className="w-3 h-3" />
+              <span>Deep GitHub Integration</span>
+            </div>
+            <h2 className="text-ink font-bold text-lg mb-2">PRs, Issues & CI/CD Status</h2>
+            <p className="text-ink-soft text-sm leading-relaxed">
+              Experience unparalleled GitHub workflow integration. Your commit timeline natively renders author avatars and live GitHub Actions CI/CD statuses. Instantly view, manage, and even 1-click publish repositories using the sleek GitHub Dashboard tab. Use `Ctrl+K` to quickly switch between your local repos!
             </p>
           </motion.div>
         </div>

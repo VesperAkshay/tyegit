@@ -1,6 +1,8 @@
-import { Search, Cloud, Target, Tag, CircleDot } from "lucide-react";
+import { Search, Cloud, Target, Tag, CircleDot, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { CommitInfo, RefInfo } from "../../types";
 import CommitGraph from "./CommitGraph";
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 interface HistoryPanelProps {
   commits: CommitInfo[];
@@ -10,6 +12,9 @@ interface HistoryPanelProps {
   onSelectCommit?: (commitId: string) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  avatarsMap?: Record<string, string>;
+  ownerRepo?: { owner: string; repo: string } | null;
+  pat?: string | null;
 }
 
 function renderRefBadge(ref: RefInfo) {
@@ -47,9 +52,40 @@ function renderRefBadge(ref: RefInfo) {
   }
 }
 
-export default function HistoryPanel({ commits, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore }: HistoryPanelProps) {
+export default function HistoryPanel({ 
+  commits, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore,
+  avatarsMap = {}, ownerRepo, pat
+}: HistoryPanelProps) {
   // We need a fixed row height so the SVG graph lines up exactly with the HTML list items
   const ROW_HEIGHT = 48; // 48px matches our styling below
+
+  const [statusesMap, setStatusesMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function fetchStatuses() {
+      if (!ownerRepo || !pat || commits.length === 0) return;
+      
+      // Fetch status for the top 5 visible commits to save API calls
+      const topCommits = commits.slice(0, 10);
+      for (const commit of topCommits) {
+        if (!statusesMap[commit.id]) {
+          try {
+             const res = await invoke<any>("get_commit_status", {
+               owner: ownerRepo.owner,
+               repo: ownerRepo.repo,
+               commitRef: commit.id,
+               token: pat
+             });
+             setStatusesMap(prev => ({ ...prev, [commit.id]: res.state }));
+          } catch (e) {
+             // Silently fail if status endpoint throws (e.g. no CI/CD configured)
+             setStatusesMap(prev => ({ ...prev, [commit.id]: "none" }));
+          }
+        }
+      }
+    }
+    fetchStatuses();
+  }, [commits, ownerRepo, pat]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -119,8 +155,25 @@ export default function HistoryPanel({ commits, searchQuery, setSearchQuery, sel
                     )}
                   </div>
                   <div className="flex justify-between items-center mt-0.5">
-                    <span className="text-[9px] font-bold text-ink-soft bg-surface px-1 truncate max-w-[120px]">{commit.author_name}</span>
-                    <span className="text-[9px] text-ink-soft font-mono">{commit.id.substring(0, 7)}</span>
+                    <div className="flex items-center gap-1.5">
+                      {avatarsMap[commit.id] && (
+                        <img src={avatarsMap[commit.id]} alt="avatar" className="w-4 h-4 rounded-full border border-chrome-indigo shadow-sm" />
+                      )}
+                      <span className="text-[9px] font-bold text-ink-soft bg-surface px-1 truncate max-w-[120px]">
+                        {commit.author_name}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {statusesMap[commit.id] && statusesMap[commit.id] !== "none" && (
+                        <div className="flex items-center" title={`CI/CD Status: ${statusesMap[commit.id]}`}>
+                          {statusesMap[commit.id] === "success" && <CheckCircle2 className="w-3 h-3 text-systems-green" />}
+                          {statusesMap[commit.id] === "failure" && <XCircle className="w-3 h-3 text-systems-red" />}
+                          {statusesMap[commit.id] === "pending" && <Clock className="w-3 h-3 text-nav-gold" />}
+                        </div>
+                      )}
+                      <span className="text-[9px] text-ink-soft font-mono">{commit.id.substring(0, 7)}</span>
+                    </div>
                   </div>
                 </div>
               ))}

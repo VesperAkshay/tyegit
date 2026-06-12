@@ -69,6 +69,7 @@ export default function AuthModal({ pendingAction, setPat, syncing, onCancel, on
         
         if (resp.access_token) {
           clearInterval(pollIntervalRef.current!);
+          await invoke("save_github_token", { token: resp.access_token }).catch(console.error);
           setPat(resp.access_token);
           onAuthenticate(pendingAction!, resp.access_token);
         } else if (resp.error && resp.error !== "authorization_pending") {
