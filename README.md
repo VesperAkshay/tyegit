@@ -1,71 +1,88 @@
-# Git Desktop Client (v0.2)
-
-A fast, beautiful, and tactile Git Desktop client built with **Tauri**, **Rust (`git2-rs`)**, and **React (TypeScript)**. 
-
-Designed with a stunning "Nintendo 2001" retro-futuristic aesthetic, this app makes Git visual, intuitive, and extremely fast.
+<div align="center">
+  <img src="https://img.shields.io/badge/Git-Desktop_v0.2-3d4f97?style=for-the-badge&logo=git&logoColor=white" alt="Git Desktop v0.2" />
+  <h1>Git Desktop</h1>
+  <p><strong>A modern, fast, AI-ready Git desktop client built for developers.</strong></p>
+  <br/>
+  <a href="https://github.com/VesperAkshay/tyegit/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest_Release-f68d1f?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" />
+  </a>
+</div>
 
 ---
 
-## 🚀 Features
+## 🚀 Overview
 
-### **Local Status Management**
-- **Sleek Interface:** View all your staged and unstaged files in a clean, categorized view.
-- **Quick Staging:** Stage (`+`) and unstage (`-`) individual files instantly.
-- **Stage All / Unstage All:** Quickly manage massive commits with single-click bulk actions.
-- **Commit Box:** Write commit messages and commit directly to your local timeline.
+Git Desktop aims to provide a powerful yet intuitive Git client that combines the reliability of the official Git implementation with the blistering performance of native Rust. Designed to make Git easier for developers without hiding its underlying power, it features a stunning **"Nintendo 2001" retro-futuristic aesthetic**—a highly tactile interface constructed from brushed-periwinkle metal plates and chamfered panels.
 
-### **History & Search**
-- **Infinite Timeline:** Scroll through your entire commit history, complete with commit messages, authors, and SHAs.
-- **Fuzzy Search:** Filter history instantly. Type an author name or a snippet of a commit message, and the list filters dynamically (debounced for performance).
-- **Inline Diff Viewer:** Click on any commit to instantly see the exact lines of code that were added or removed in a beautiful inline diff viewer.
+---
 
-### **Branching & Tagging**
-- **Seamless Switching:** Dropdown menu to instantly switch between local branches or checkout tags.
-- **Branch Creation:** Easily spin off new branches from your current `HEAD` via the sleek branch creation modal.
-- **Tagging Engine:** Create lightweight tags to mark specific releases or milestones, complete with optional tag messages.
+## ✨ Features (v0.2)
 
-### **Stashing**
-- **Squirrel Away Work:** Working on something but need to switch branches? Click **STASH** to instantly save your unstaged/staged work (including untracked files).
-- **Stash Management:** View all your saved stashes in the sidebar. You can **Apply** them, **Pop** them (apply and delete), or **Drop** them permanently.
+### 1. Robust Local Management
+- **Instant Staging:** Stage (`+`), unstage (`-`), or bulk-process your changes instantly.
+- **Status Dashboard:** A clean, segmented view of modified, added, deleted, renamed, and untracked files.
+- **Fluid Committing:** Write commit messages and push to your local timeline effortlessly.
 
-### **Merging & Conflict Resolution (V2 Engine)**
-- **True 3-Way Merges:** Select any branch and merge it directly into your current timeline. The backend state engine handles the complex 3-way merge math.
-- **Conflict Detection:** If timelines collide, the app enters a special `MERGE` state. A glowing warning banner appears to guide you.
-- **Visual Conflict Flags:** Conflicted files are flagged with bright red `!` badges. Simply open the file in your preferred editor (like VS Code), resolve the conflict, click Stage, and Commit to finalize the merge.
-- **Bail Out:** Abort merge button available if things get too messy.
+### 2. High-Performance History & Search
+- **Infinite Timeline:** Fluidly scroll through your entire repository history, viewing commit details, authors, and SHAs.
+- **Fuzzy Search:** Filter commit history in real-time. Simply type an author name or a message snippet to locate commits instantly (debounced for extreme performance).
+- **Inline Diff Viewer:** Click on any commit or staged file to view a beautiful inline diff, highlighting exact line additions and deletions.
 
-### **Network Syncing**
-- **Push / Pull / Fetch:** Keep your local repository in sync with GitHub, GitLab, or any remote server.
-- **Secure Authentication:** The app intercepts network calls and prompts you for a Personal Access Token (PAT) via a secure Auth Modal, ensuring you never have to mess with system credential helpers.
+### 3. Advanced Git Operations
+- **V2 Merge Engine:** Perform true 3-way merges directly from the UI. Select any branch and merge it into your active timeline safely.
+- **Smart Conflict Detection:** When timelines collide, the application enters a distinct `MERGE` state. Conflicting files are flagged with bright red `!` badges, allowing you to resolve them in your preferred editor before finalizing the merge.
+- **Stashing:** Need to context switch? Click **STASH** to securely save your staged, unstaged, and untracked files. Later, you can **Apply**, **Pop**, or **Drop** your stashes.
+
+### 4. Branching & Tagging
+- **Seamless Branching:** Spin off new branches or checkout existing ones instantly using the sleek, keyboard-friendly Branch Modal.
+- **Tag Management:** Create lightweight tags to mark milestones and releases, equipped with optional tag messages.
+
+### 5. Network Sync & Secure Auth
+- **Push / Pull / Fetch:** Stay synchronized with remote repositories securely.
+- **GitHub OAuth2 Device Flow:** Authenticate seamlessly without dealing with Personal Access Tokens (PATs). The app securely handles network calls directly.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend:** React, TypeScript, TailwindCSS, Lucide Icons.
-- **Backend:** Rust, Tauri.
-- **Git Engine:** `git2-rs` (libgit2 bindings for Rust).
-- **Architecture:** The backend operates as a pure Repository State Machine, separating Git logic from UI logic and communicating via Tauri IPC commands.
+Built for maximum efficiency, speed, and safety.
+
+- **Frontend:** React 19, TypeScript, TailwindCSS, Framer Motion, and Lucide Icons.
+- **Backend Core:** Rust and Tauri 2.0.
+- **Git Engine:** `git2-rs` (libgit2 bindings for Rust) ensuring complete repository integrity.
+- **Architecture:** Driven by a pure Repository State Machine. The backend strictly isolates Git logic, communicating with the UI solely via high-speed Tauri IPC commands.
 
 ---
 
-## 💻 How to Run Locally
+## 💻 Getting Started
 
 ### Prerequisites
-1. **Rust:** Install Rust via [rustup.rs](https://rustup.rs/).
-2. **Node.js / Bun:** Install [Bun](https://bun.sh/) (or Node/NPM).
-3. **Tauri CLI:** Ensure you have the Tauri prerequisites installed for your OS.
+1. **Rust Toolchain:** Install via [rustup.rs](https://rustup.rs/).
+2. **JavaScript Runtime:** Install [Bun](https://bun.sh/) (or Node.js).
+3. **Tauri CLI:** Follow the [Tauri Prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites) for your operating system.
 
-### Getting Started
+### Installation
 
-1. Clone this repository.
-2. Install the frontend dependencies:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/VesperAkshay/tyegit.git
+   cd tyegit
+   ```
+
+2. Install dependencies:
    ```bash
    bun install
    ```
-3. Run the Tauri development server:
+
+3. Launch the development server:
    ```bash
    bun run tauri dev
    ```
-4. The app will compile the Rust backend and launch the React window. 
-5. Click **OPEN REPOSITORY**, select a local folder containing a `.git` folder, and start hacking!
+
+4. The Rust backend will compile, and the React window will launch. Click **OPEN REPOSITORY**, select a `.git` initialized folder, and experience Git like never before!
+
+---
+
+<div align="center">
+  <small>© 2026 Git Desktop. Built with Tauri & Rust.</small>
+</div>
