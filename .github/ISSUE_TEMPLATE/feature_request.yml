@@ -1,0 +1,52 @@
+name: "✨ Feature Request"
+description: "Suggest an idea or improvement for the Git Desktop Client"
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Share your idea!
+        We're always looking to improve the Git Desktop Client. Please describe your feature request below.
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Is your feature request related to a problem?"
+      description: "A clear and concise description of what the problem is. E.g., 'I find it frustrating when I can't see...'"
+      placeholder: "It is hard to distinguish branches when there are many of them..."
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Describe the solution you'd like"
+      description: "A clear and concise description of what you want to happen."
+      placeholder: "I would like a search bar in the branch dropdown to filter branches..."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Describe alternatives you've considered"
+      description: "A clear and concise description of any alternative solutions or features you've considered."
+      placeholder: "Alternatively, ordering branches alphabetically would help."
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional Context"
+      description: "Add any other context, mockup screenshots, or details about the feature request here."
+      placeholder: "Mockups, links to standard git commands, or specific UI layouts..."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Pre-flight Checklist"
+      description: "Please confirm the following before submitting."
+      options:
+        - label: "I have searched the existing issues/discussions to verify this feature hasn't been requested before."
+          required: true
+        - label: "This is a feature request, not a support request or bug report."
+          required: true

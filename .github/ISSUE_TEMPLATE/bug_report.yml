@@ -1,0 +1,88 @@
+name: "🐛 Bug Report"
+description: "Report a bug to help us improve the Git Desktop Client"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for reporting a bug!
+        Please fill out this form as completely as possible to help us reproduce and resolve the issue quickly.
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "When I click on the stash button, the app crashes..."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Steps to reproduce the behavior. Please include commands or UI clicks."
+      placeholder: |
+        1. Open the repository '...'
+        2. Stage a file named '...'
+        3. Click on the 'Stash' button
+        4. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Behavior"
+      description: "What did you expect to happen?"
+      placeholder: "The unstaged changes should be stashed, and the stash list should update."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Behavior"
+      description: "What actually happened? Please include any error messages."
+      placeholder: "The application window goes blank and Tauri crashes."
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating System"
+      description: "Which operating system are you running the client on?"
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (Ubuntu/Debian)
+        - Linux (Fedora/RHEL)
+        - Linux (Arch)
+        - Other (please specify in context)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: "Client Version"
+      description: "Version of the Git Desktop Client (e.g., v0.2, or commit hash if running from source)."
+      placeholder: "v0.2"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs & Screenshots"
+      description: "Paste any relevant logs (Tauri terminal log, Chrome DevTools console output) or drag-and-drop screenshots here."
+      placeholder: "Paste console logs or terminal trace here..."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checkboxes
+    attributes:
+      label: "Pre-flight Checklist"
+      description: "Please confirm the following before submitting."
+      options:
+        - label: "I have searched the existing issues to make sure this bug has not already been reported."
+          required: true
+        - label: "I am running the latest version of the app, or a verified dev build."
+          required: true
