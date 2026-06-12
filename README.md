@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Git-Desktop_v0.2-3d4f97?style=for-the-badge&logo=git&logoColor=white" alt="Git Desktop v0.2" />
+  <img src="https://img.shields.io/badge/Git-Desktop_v1.1.0-3d4f97?style=for-the-badge&logo=git&logoColor=white" alt="Git Desktop v1.1.0" />
   <h1>Git Desktop</h1>
   <p><strong>A modern, fast, AI-ready Git desktop client built for developers.</strong></p>
   <br/>
@@ -16,9 +16,10 @@ Git Desktop aims to provide a powerful yet intuitive Git client that combines th
 
 ---
 
-## ✨ Features (v0.2)
+## ✨ Features (v1.1.0)
 
 ### 1. Robust Local Management
+- **Global Quick Switcher:** Press `Ctrl+K` (or `Cmd+K`) anywhere to open the Command Palette and instantly switch between your recent repositories!
 - **Instant Staging:** Stage (`+`), unstage (`-`), or bulk-process your changes instantly.
 - **Status Dashboard:** A clean, segmented view of modified, added, deleted, renamed, and untracked files.
 - **Fluid Committing:** Write commit messages and push to your local timeline effortlessly.
@@ -37,9 +38,12 @@ Git Desktop aims to provide a powerful yet intuitive Git client that combines th
 - **Seamless Branching:** Spin off new branches or checkout existing ones instantly using the sleek, keyboard-friendly Branch Modal.
 - **Tag Management:** Create lightweight tags to mark milestones and releases, equipped with optional tag messages.
 
-### 5. Network Sync & Secure Auth
-- **Push / Pull / Fetch:** Stay synchronized with remote repositories securely.
-- **GitHub OAuth2 Device Flow:** Authenticate seamlessly without dealing with Personal Access Tokens (PATs). The app securely handles network calls directly.
+### 5. Deep GitHub Integration (New!)
+- **PRs & Issues Dashboard:** Open the **GITHUB** tab to view your repository's open Pull Requests and Issues in a sleek dashboard, fully hyperlinked.
+- **Timeline Avatars:** Commit authors' GitHub profile pictures are automatically loaded natively into the Commit History timeline!
+- **CI/CD Status Badges:** The timeline lazily queries your GitHub Actions Check Runs and renders beautiful status badges (Success, Failure, Pending) inline with your commits.
+- **1-Click Publishing:** Initialized a local project? Jump to the GitHub tab to instantly publish it to the cloud with one click.
+- **Secure Network Sync:** Fetch, Pull, and Push with seamless Personal Access Token (PAT) authentication.
 
 ---
 

@@ -3,6 +3,11 @@ pub mod db;
 pub mod git;
 
 use tauri::Manager;
+use std::sync::Mutex;
+
+pub struct AppState {
+    pub db: Mutex<rusqlite::Connection>,
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -12,10 +17,25 @@ pub fn run() {
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir().unwrap();
             std::fs::create_dir_all(&app_data_dir).unwrap();
-            let _conn = db::sqlite::init_db(app_data_dir).unwrap();
+            let conn = db::sqlite::init_db(app_data_dir).unwrap();
+            app.manage(AppState {
+                db: Mutex::new(conn),
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::get_github_token,
+            commands::save_github_token,
+            commands::delete_github_token,
+            commands::github::get_user_profile,
+            commands::github::list_user_repositories,
+            commands::github::get_commit_status,
+            commands::github::get_commit_avatars,
+            commands::github::list_pull_requests,
+            commands::github::list_issues,
+            commands::github::publish_repository,
+            commands::get_recent_repositories,
+            commands::get_remote_url,
             commands::open_repository,
             commands::git_status,
             commands::clone_repository,
