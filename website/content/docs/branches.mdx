@@ -1,0 +1,25 @@
+---
+title: Branch Management
+description: How to keep your experiments separate and pivot seamlessly.
+---
+
+## What is Branching?
+
+A branch represents an independent line of development. You can think of them as parallel universes where you can experiment, build features, or fix bugs without affecting the main (`master` or `main`) codebase.
+
+## Why keep experiments separate?
+
+If you do all your work on a single branch, a sudden request to fix a production bug will require you to either commit half-finished work or stash it away. Branching allows you to pivot instantly.
+
+## How to use Branches
+
+### Step 1: Switch Branches
+In the top header of TyeGit, you'll see a dropdown with a branch icon (`<span className="bg-vintage-red"></span>`). Click it to view all your local branches. Selecting a branch instantly checks it out, mutating your working directory to match that timeline.
+
+### Step 2: Create a Branch
+At the top of the Branch dropdown, select **+ Create Branch**. 
+A modal will appear. Type the new branch name and confirm. TyeGit will branch off your current `HEAD` and automatically check out the new branch so you can start working immediately.
+
+## Tips
+
+> **Name clearly**: Use prefixes like `feat/`, `fix/`, or `chore/` to keep your branch dropdown organized.

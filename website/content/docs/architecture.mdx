@@ -1,0 +1,26 @@
+---
+title: System Architecture
+description: How TyeGit is built under the hood
+---
+
+import ArchitectureDiagram from '../../src/components/ArchitectureDiagram';
+
+# System Architecture
+
+TyeGit is built using the **Tauri** framework, which allows us to write a blazing fast frontend in React and securely connect it to a high-performance Rust backend.
+
+## The IPC Bridge
+
+<ArchitectureDiagram />
+
+The animation above illustrates how our frontend and backend communicate. 
+Instead of shipping a massive Chromium and Node.js instance (like Electron does), we use the OS's native WebView for the UI and Rust for everything else.
+
+### 1. The Frontend (React)
+The frontend is strictly responsible for rendering the UI and handling user interactions. It has no direct access to the filesystem or Git binaries.
+
+### 2. The Bridge (Tauri IPC)
+When you click "Stage Hunk", the frontend sends an Inter-Process Communication (IPC) message to the backend. Because Tauri is so deeply integrated, this transmission takes fractions of a millisecond.
+
+### 3. The Backend (Rust)
+The Rust backend receives the command, executes the highly-optimized Git operation natively against the `.git` directory, and streams the new repository state back to the frontend to render.

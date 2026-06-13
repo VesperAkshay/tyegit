@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "getting-started",
+    "architecture",
+    "repository",
+    "staging",
+    "branches",
+    "merge",
+    "networking"
+  ]
+}

@@ -1,0 +1,31 @@
+---
+title: Multi-Remote Networking
+description: How to Fetch, Pull, and Push code seamlessly.
+---
+
+## What are Remotes?
+
+A remote is a version of your repository hosted on the internet (like GitHub or GitLab). `origin` is the default remote, but you can have multiple remotes (e.g., `upstream` to pull from a main open-source project).
+
+## Why Multi-Remote?
+
+When working on complex projects, you often need to fetch from a central repository (`upstream`), but push your commits to your personal fork (`origin`). TyeGit allows you to do this natively without dropping to the CLI.
+
+## How to use Networking
+
+### Step 1: Manage Remotes
+Click the Globe dropdown (`🌐`) in the top right header. Select **⚙️ Manage Remotes**.
+Here you can add new remote URLs, or delete existing ones.
+
+### Step 2: Select an Active Remote
+From that same dropdown, select the specific remote you want to target.
+
+### Step 3: Fetch, Pull, Push
+Once your Active Remote is selected, the action buttons will target that remote:
+- **FETCH**: Downloads commits and references from the remote without mutating your local working tree.
+- **PULL**: Fetches and performs a **fast-forward** merge to match the remote branch. *(Note: TyeGit currently strictly enforces fast-forward pulls. If your local history diverges, you must manually rebase or merge).*
+- **PUSH**: Uploads your local commits. TyeGit automatically sets the upstream tracking branch on your selected remote!
+
+## Tips
+
+> TyeGit handles GitHub Authentication automatically via the Device Flow. You never have to manually type a password or generate a Personal Access Token!

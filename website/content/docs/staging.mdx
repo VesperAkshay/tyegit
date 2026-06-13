@@ -1,0 +1,35 @@
+---
+title: God-Mode Staging
+description: How to use TyeGit's embedded diff editor to surgically craft commits.
+---
+
+## What is God-Mode Staging?
+
+TyeGit features a fully embedded instance of the **Monaco Editor** (the same editor that powers VS Code) directly in the client. This replaces the traditional "side-by-side read-only diff" with an interactive editing experience.
+
+## Why use Hunk Staging?
+
+Traditional Git GUIs force you to commit entire files at a time. If you have a file with a bug fix on line 10, and an unfinished experiment on line 50, committing the file pollutes your history.
+
+With TyeGit, you can stage *only* the bug fix, commit it, and leave the experiment in your working directory.
+
+## How to use it
+
+### Step 1: Open the Diff Viewer
+In the Left Rail (Status Panel), click on any Unstaged file that has been modified. The center pane will open the God-Mode Diff Viewer.
+
+### Step 2: Hunk Staging (The Arrows)
+In the center margin between the left and right panes, you will see `←` arrows pointing to the left.
+- **Left Pane**: Your Git Index (What is currently staged).
+- **Right Pane**: Your Working Directory (What is on your disk).
+
+Click an arrow to instantly copy that specific chunk of code from your Working Directory into your Git Index!
+
+### Step 3: Editable Index (Manual Staging)
+Sometimes an arrow isn't precise enough. Because the Left Pane is a real editor, you can literally click inside it and start typing! 
+You can manually delete lines, fix typos, or format code *directly inside the staging area* without touching your working directory files.
+When you are done editing, click the **SAVE TO INDEX (STAGE)** button in the top right.
+
+## Tips
+
+> **Perfect Commits**: Use hunk staging to separate your massive "end of day" working directory state into 3 or 4 small, atomic, perfectly scoped commits. Reviewers will thank you.

@@ -1,135 +1,254 @@
 import * as React from "react";
 import Link from "next/link";
-import { GitBranch, GitMerge, FileText, Search } from "lucide-react";
-import * as motion from "framer-motion/client";
-import { DownloadButtons } from "@/components/DownloadButtons";
+import { GitBranch, GitMerge, Search, Layers, ShieldCheck, Zap } from "lucide-react";
+import { StagingAnimation } from "@/components/animations/StagingAnimation";
+import { MergeAnimation } from "@/components/animations/MergeAnimation";
+import { StashAnimation } from "@/components/animations/StashAnimation";
 
 export default function Home() {
   return (
-    <main className="flex-1 w-full max-w-[900px] mx-auto mt-6 px-4 flex flex-col space-y-6">
+    <main className="flex-1 w-full max-w-[1000px] mx-auto mt-12 px-6 flex flex-col space-y-24 mb-24">
       
-      {/* Hero Panel */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-lavender rounded-md panel-bevel p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[300px]"
-      >
-        {/* Faux texture pattern in background */}
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3d4f97_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      {/* ----------------- LAYER 1: MARKETING HERO ----------------- */}
+      <section className="flex flex-col items-center text-center space-y-8 mt-12">
+        <div className="bg-charcoal text-cream font-mono text-xs px-3 py-1 rounded-full border border-warm-gray mb-4">
+          TyeGit v2.0.0 is now available
+        </div>
         
-        <div className="relative z-10 flex flex-col items-center text-center">
-          <h1 className="hero-wordmark text-5xl md:text-7xl font-black italic tracking-tighter mb-4">
-            Git Desktop v1.1.0
-          </h1>
-          <p className="text-ink text-sm md:text-base font-bold bg-white/50 px-4 py-2 rounded-md mb-6 border border-chrome-indigo/20">
-            A modern, fast, AI-ready Git client built on Rust & Tauri.
+        <h1 className="hero-wordmark text-6xl md:text-8xl font-black tracking-tighter text-charcoal">
+          Git, without the friction.
+        </h1>
+        
+        <p className="text-charcoal/80 text-xl max-w-2xl font-medium">
+          The Git client that stays out of your way. Fast. Precise. Built in Rust.
+        </p>
+
+        <div className="flex space-x-4 pt-4">
+          <Link href="/download" className="bg-vintage-red text-cream rounded-md px-6 py-3 font-bold button-bevel text-lg hover:bg-vintage-red/90 transition-colors">
+            Download for Windows
+          </Link>
+          <Link href="/docs/getting-started" className="bg-surface text-charcoal rounded-md px-6 py-3 font-bold border border-warm-gray hover:bg-warm-gray/30 transition-colors">
+            View Docs
+          </Link>
+          <a href="https://github.com/VesperAkshay/tyegit" className="bg-charcoal text-cream rounded-md px-6 py-3 font-bold hover:bg-charcoal/90 transition-colors">
+            GitHub
+          </a>
+        </div>
+      </section>
+
+      {/* ----------------- LAYER 2: BENTO GRID ----------------- */}
+      <section className="grid grid-cols-1 md:grid-cols-6 gap-6">
+        
+        {/* Large Feature: Performance */}
+        <div className="col-span-1 md:col-span-4 bg-charcoal rounded-2xl p-8 md:p-10 border border-charcoal/80 shadow-xl overflow-hidden relative flex flex-col justify-between group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-vintage-red/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-700"></div>
+          <div className="relative z-10 space-y-4 max-w-lg mb-12">
+            <div className="inline-flex items-center space-x-2 bg-vintage-red/20 text-vintage-red px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+              <Zap className="w-3 h-3" />
+              <span>Native Performance</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-cream tracking-tight">Built in Rust. Zero Electron bloat.</h2>
+            <p className="text-cream/70 font-medium text-lg">
+              TyeGit communicates directly with git binaries. Repository loading is instant, diffs render at 60fps, and memory usage stays incredibly low.
+            </p>
+          </div>
+          
+          <div className="relative z-10 bg-[#1e1d1c] border border-white/10 rounded-lg p-4 font-mono text-sm text-cream/80 w-full overflow-hidden shadow-2xl">
+            <div className="flex space-x-2 mb-3">
+              <div className="w-3 h-3 rounded-full bg-vintage-red/80"></div>
+              <div className="w-3 h-3 rounded-full bg-warm-gray/50"></div>
+              <div className="w-3 h-3 rounded-full bg-cream/50"></div>
+            </div>
+            <div className="space-y-1">
+              <p><span className="text-vintage-red font-bold">$</span> tyegit bench --repo tyegit-core</p>
+              <p className="text-cream/50">Loading repository metadata...</p>
+              <p className="text-green-400">Ok: Parsed 14,204 commits in 12ms</p>
+              <p className="text-cream/50">Rendering unified diff view...</p>
+              <p className="text-green-400">Ok: 1.2MB diff rendered in 4ms</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Small Feature: Precision Staging */}
+        <div className="col-span-1 md:col-span-2 bg-surface rounded-2xl p-8 border border-warm-gray shadow-md flex flex-col justify-between hover:border-vintage-red/50 transition-colors">
+          <div className="space-y-4 mb-8">
+            <div className="bg-charcoal text-cream w-10 h-10 rounded-lg flex items-center justify-center">
+              <Layers className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-charcoal tracking-tight">Surgical Precision</h2>
+            <p className="text-charcoal/70 font-medium">
+              Stage line-by-line or by hunk. Open the index and edit code directly before committing. Total control over your history.
+            </p>
+          </div>
+          <div className="bg-cream rounded border border-warm-gray p-3 font-mono text-xs shadow-inner">
+            <div className="text-vintage-red/80 bg-vintage-red/10 px-2 py-1 rounded-sm mb-1">- console.log(data);</div>
+            <div className="text-green-600 bg-green-100 px-2 py-1 rounded-sm flex justify-between items-center">
+              <span>+ logger.debug(data);</span>
+              <span className="bg-green-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm cursor-pointer hover:bg-green-700">STAGE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Small Feature: Guardrails */}
+        <div className="col-span-1 md:col-span-3 bg-muted-beige rounded-2xl p-8 border border-warm-gray shadow-md flex flex-col justify-between hover:bg-warm-gray/20 transition-colors">
+          <div className="space-y-4 mb-8">
+            <div className="bg-charcoal text-cream w-10 h-10 rounded-lg flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-charcoal tracking-tight">Built-in Guardrails</h2>
+            <p className="text-charcoal/70 font-medium">
+              We enforce fast-forward pulls by default and prevent accidental merges into protected branches. Avoid Git disasters before they happen.
+            </p>
+          </div>
+          <div className="bg-charcoal text-cream p-4 rounded-lg font-mono text-xs border border-charcoal/80 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-vintage-red font-bold">Merge Conflict Detected</p>
+              <p className="text-cream/70">src/components/App.tsx</p>
+            </div>
+            <button className="bg-cream text-charcoal px-3 py-1.5 rounded-sm font-bold button-bevel">Resolve</button>
+          </div>
+        </div>
+
+        {/* Small Feature: Multi-Remote */}
+        <div className="col-span-1 md:col-span-3 bg-vintage-red rounded-2xl p-8 border border-vintage-red shadow-lg flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute -bottom-10 -right-10 opacity-20 group-hover:scale-110 transition-transform duration-500">
+            <GitBranch className="w-48 h-48 text-cream" />
+          </div>
+          <div className="relative z-10 space-y-4 mb-8">
+            <div className="bg-cream text-vintage-red w-10 h-10 rounded-lg flex items-center justify-center shadow-md">
+              <GitMerge className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-cream tracking-tight">Multi-Remote Mastery</h2>
+            <p className="text-cream/80 font-medium">
+              Manage upstream and origin effortlessly. Sync forks, push to multiple remotes, and track upstream branches with a single click.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ----------------- LAYER 3: WORKFLOW SHOWCASES ----------------- */}
+      <section className="space-y-24">
+        
+        <div className="flex flex-col md:flex-row gap-12 items-center">
+          <div className="md:w-1/2 space-y-6">
+            <div className="text-vintage-red font-bold text-sm tracking-widest uppercase">Workflow 1</div>
+            <h2 className="text-4xl font-bold text-charcoal tracking-tight">Commit only what matters.</h2>
+            <p className="text-lg text-charcoal/80">
+              Stop committing `console.log`s. TyeGit gives you an embedded God-Mode editor. Open the diff, click the arrows to selectively stage specific hunks, and build perfectly clean commits.
+            </p>
+            <div className="font-mono text-sm bg-surface p-4 rounded-md border border-warm-gray text-charcoal/60">
+              Edit file → Open diff → Stage hunk → Commit → Push
+            </div>
+            <Link href="/docs/staging" className="inline-block mt-4 text-vintage-red font-bold hover:underline">Read the Staging Guide →</Link>
+          </div>
+          <div className="md:w-1/2 bg-charcoal rounded-xl aspect-video border-4 border-charcoal/10 relative shadow-2xl flex items-center justify-center text-cream">
+            <StagingAnimation />
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row-reverse gap-12 items-center">
+          <div className="md:w-1/2 space-y-6">
+            <div className="text-vintage-red font-bold text-sm tracking-widest uppercase">Workflow 2</div>
+            <h2 className="text-4xl font-bold text-charcoal tracking-tight">Keep experiments separate.</h2>
+            <p className="text-lg text-charcoal/80">
+              Branching shouldn't be scary. Create branches instantly, work in isolation, and when you are ready, use our robust 3-way merge engine to combine work safely.
+            </p>
+            <div className="font-mono text-sm bg-surface p-4 rounded-md border border-warm-gray text-charcoal/60">
+              Create branch → Work → Merge → Resolve conflicts → Finish
+            </div>
+            <Link href="/docs/merge" className="inline-block mt-4 text-vintage-red font-bold hover:underline">Read the Merge Guide →</Link>
+          </div>
+          <div className="md:w-1/2 bg-surface rounded-xl aspect-video border border-warm-gray relative shadow-xl flex items-center justify-center text-charcoal/50">
+            <MergeAnimation />
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-12 items-center">
+          <div className="md:w-1/2 space-y-6">
+            <div className="text-vintage-red font-bold text-sm tracking-widest uppercase">Workflow 3</div>
+            <h2 className="text-4xl font-bold text-charcoal tracking-tight">Save work without committing.</h2>
+            <p className="text-lg text-charcoal/80">
+              Need to pivot tasks suddenly? Don't make a messy "WIP" commit. Stash your changes instantly, switch branches, and pop your stash back out when you return.
+            </p>
+            <div className="font-mono text-sm bg-surface p-4 rounded-md border border-warm-gray text-charcoal/60">
+              Edit → Stash → Switch branch → Apply stash
+            </div>
+          </div>
+          <div className="md:w-1/2 bg-surface rounded-xl aspect-video border border-warm-gray relative shadow-xl flex items-center justify-center text-charcoal/50">
+            <StashAnimation />
+          </div>
+        </div>
+
+      </section>
+
+      {/* ----------------- LAYER 4: FEATURE MATRIX ----------------- */}
+      <section className="bg-surface rounded-2xl p-10 border border-warm-gray">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-charcoal mb-4">How we compare</h2>
+          <p className="text-charcoal/70 max-w-2xl mx-auto font-medium">
+            TyeGit is built for speed and precision. While established clients offer complex historical graph visualizers, our v2.0 release focuses heavily on perfecting the daily staging, committing, and remote syncing workflows. Future updates will bring interactive rebasing and deep graph analysis to rival the enterprise players.
           </p>
-          <DownloadButtons />
         </div>
-      </motion.div>
-
-      {/* Feature Grid Split */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* Main Features Column (Left 2/3) */}
-        <div className="md:col-span-2 flex flex-col space-y-4">
-          
-          {/* Feature 1 */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-platinum rounded-md panel-bevel p-4"
-          >
-            <div className="bg-canvas text-white font-bold text-[11px] uppercase px-2 py-1 flex items-center space-x-2 mb-3 -mt-4 -mx-4 rounded-t-md border-b border-chrome-indigo">
-              <GitMerge className="w-3 h-3" />
-              <span>V2 Merge Engine</span>
-            </div>
-            <h2 className="text-ink font-bold text-lg mb-2">True 3-Way Merges</h2>
-            <p className="text-ink-soft text-sm leading-relaxed mb-4">
-              Select any branch and merge it directly into your active timeline safely. Our advanced backend state engine handles complex 3-way merge math and highlights conflicts instantly.
-            </p>
-            <div className="flex justify-end">
-              <Link href="/docs/guides" className="bg-signal text-white rounded-xs px-2 py-0.5 text-[10px] font-bold uppercase flex items-center space-x-1 button-bevel">
-                <span>Learn More</span>
-                <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M9 5l7 7-7 7" /></svg>
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* Feature 2 */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="bg-platinum rounded-md panel-bevel p-4"
-          >
-            <div className="bg-canvas text-white font-bold text-[11px] uppercase px-2 py-1 flex items-center space-x-2 mb-3 -mt-4 -mx-4 rounded-t-md border-b border-chrome-indigo">
-              <Search className="w-3 h-3" />
-              <span>Infinite Timeline</span>
-            </div>
-            <h2 className="text-ink font-bold text-lg mb-2">High-Speed Fuzzy Search</h2>
-            <p className="text-ink-soft text-sm leading-relaxed">
-              Filter commit history in real-time. Type an author name or snippet to locate commits instantly, backed by Rust's blistering performance.
-            </p>
-          </motion.div>
-
-          {/* Feature 3 (New) */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="bg-platinum rounded-md panel-bevel p-4"
-          >
-            <div className="bg-canvas text-white font-bold text-[11px] uppercase px-2 py-1 flex items-center space-x-2 mb-3 -mt-4 -mx-4 rounded-t-md border-b border-chrome-indigo">
-              <GitBranch className="w-3 h-3" />
-              <span>Deep GitHub Integration</span>
-            </div>
-            <h2 className="text-ink font-bold text-lg mb-2">PRs, Issues & CI/CD Status</h2>
-            <p className="text-ink-soft text-sm leading-relaxed">
-              Experience unparalleled GitHub workflow integration. Your commit timeline natively renders author avatars and live GitHub Actions CI/CD statuses. Instantly view, manage, and even 1-click publish repositories using the sleek GitHub Dashboard tab. Use `Ctrl+K` to quickly switch between your local repos!
-            </p>
-          </motion.div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b-2 border-warm-gray text-charcoal/60 text-sm uppercase tracking-wider">
+                <th className="pb-4 px-4 font-semibold">Feature</th>
+                <th className="pb-4 px-4 font-semibold text-center text-vintage-red">TyeGit</th>
+                <th className="pb-4 px-4 font-semibold text-center">GitHub Desktop</th>
+                <th className="pb-4 px-4 font-semibold text-center">GitKraken</th>
+                <th className="pb-4 px-4 font-semibold text-center">Tower</th>
+              </tr>
+            </thead>
+            <tbody className="text-charcoal font-medium">
+              <tr className="border-b border-warm-gray/50 hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Open Source</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+              </tr>
+              <tr className="border-b border-warm-gray/50 hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Native App (No Electron)</td>
+                <td className="py-4 px-4 text-center">✅ <span className="text-xs opacity-50 block">(Rust/Tauri)</span></td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center">✅</td>
+              </tr>
+              <tr className="border-b border-warm-gray/50 hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Line-by-Line Staging</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center">✅</td>
+              </tr>
+              <tr className="border-b border-warm-gray/50 hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Editable Index (God-Mode)</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+              </tr>
+              <tr className="border-b border-warm-gray/50 hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Strict Fast-Forward Default</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+              </tr>
+              <tr className="hover:bg-warm-gray/10 transition-colors">
+                <td className="py-4 px-4">Visual Commit Graph</td>
+                <td className="py-4 px-4 text-center text-vintage-red text-sm font-bold">Coming Soon</td>
+                <td className="py-4 px-4 text-center opacity-30">❌</td>
+                <td className="py-4 px-4 text-center">✅</td>
+                <td className="py-4 px-4 text-center">✅</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </section>
 
-        {/* Right Action Rail (1/3) */}
-        <div className="md:col-span-1 flex flex-col space-y-4">
-          
-          {/* Quick Links Box */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-sm panel-bevel p-4"
-          >
-            <div className="bg-amber text-carbon font-bold text-[11px] uppercase px-2 py-1 mb-3 -mt-4 -mx-4 rounded-t-sm border-b border-chrome-indigo">
-              Quick Links
-            </div>
-            <ul className="flex flex-col space-y-2 text-sm">
-              <li><Link href="/docs/getting-started" className="text-ink-soft font-bold hover:underline">Installation Guide</Link></li>
-              <li><Link href="/docs/architecture" className="text-ink-soft font-bold hover:underline">How it Works (IPC)</Link></li>
-              <li><Link href="/docs/guides" className="text-ink-soft font-bold hover:underline">Handling Conflicts</Link></li>
-            </ul>
-          </motion.div>
-
-          {/* Tech Stack Promo */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="bg-systems-teal text-white rounded-sm panel-bevel p-4 flex flex-col items-center justify-center text-center"
-          >
-            <h3 className="font-bold text-[11px] uppercase tracking-wide mb-2 opacity-80">Powered By</h3>
-            <div className="font-black italic text-2xl hero-wordmark">RUST + TAURI</div>
-            <p className="text-xs mt-2 opacity-90">Unmatched Speed.</p>
-          </motion.div>
-
-        </div>
-      </div>
     </main>
   );
 }

@@ -1,0 +1,34 @@
+---
+title: Merging & Conflicts
+description: Safely combine branches using TyeGit's V2 Merge Engine.
+---
+
+## What is Merging?
+
+Merging is the process of taking the code from one branch (e.g., your `feat/new-ui` branch) and fusing it into another branch (e.g., `main`).
+
+## Why use TyeGit's Merge Engine?
+
+Command-line Git merges can be terrifying when conflicts occur. It leaves your terminal in a confusing `MERGING` state, and finding the conflicted files is a chore. 
+TyeGit abstracts this entirely. It explicitly isolates conflicted files, provides an "Abort" panic button, and guides you to resolution.
+
+## How to Merge
+
+### Step 1: Start the Merge
+Ensure you are currently on the branch you want to merge *into* (e.g., `main`).
+Click the `Merge` icon in the top header. A modal will ask you which branch you want to merge into your current timeline.
+
+### Step 2: Handle Conflicts (If Any)
+If the two branches modified the exact same lines of code, TyeGit will enter a `MERGE` state.
+The Left Rail will clear out and only display the specific files that are in conflict.
+
+### Step 3: Resolve
+Open the conflicted files in your IDE (like VS Code or Neovim) and manually resolve the `<<<<<<< HEAD` blocks. 
+Once resolved, come back to TyeGit and **Stage** the file. 
+
+### Step 4: Finish Merge
+Once all conflicted files are staged, the commit box will automatically populate with a Merge Commit message. Click Commit to finish!
+
+## Tips
+
+> If you get overwhelmed by conflicts, simply click the red **ABORT MERGE** button to instantly cancel the merge and return your branch to exactly how it was before.

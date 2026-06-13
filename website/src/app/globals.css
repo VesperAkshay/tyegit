@@ -1,30 +1,44 @@
 @import "tailwindcss";
 
-@theme inline {
-  --color-brand-primary: #e60012;
-  --color-signal: #f68d1f;
-  --color-amber: #ecab37;
-  --color-nav-gold: #e48600;
-  
-  --color-canvas: #7a8aba;
-  --color-periwinkle: #8ba1d4;
-  --color-sky: #9fbee7;
-  --color-lavender: #acace7;
-  --color-ice: #c0d5e6;
-  --color-chrome-indigo: #3d4f97;
-  --color-muted-indigo: #60619c;
-  --color-platinum: #dedede;
-  --color-surface: #ffffff;
-  
-  --color-ink: #21242e;
-  --color-ink-soft: #3d4f97;
-  --color-on-primary: #ffffff;
-  
-  --color-systems-teal: #206479;
-  --color-games-red: #a7282b;
-  --color-carbon: #21242e;
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
-  --font-sans: Arial, Helvetica, sans-serif;
+@source "../../node_modules/fumadocs-ui/dist/**/*.js";
+
+@theme inline {
+  --color-cream: #F5F1E7;
+  --color-vintage-red: #B12A2A;
+  --color-charcoal: #2B2A29;
+  --color-warm-gray: #D1CEC7;
+  --color-muted-beige: #E6E1D6;
+  
+  --color-canvas: var(--color-cream);
+  --color-ink: var(--color-charcoal);
+  --color-primary: var(--color-vintage-red);
+  --color-border: var(--color-warm-gray);
+  --color-surface: var(--color-muted-beige);
+
+  --font-sans: "Geist", "IBM Plex Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+:root, .dark {
+  /* Override Fumadocs Theme Variables to force Famicom colors */
+  --color-fd-background: var(--color-cream);
+  --color-fd-foreground: var(--color-charcoal);
+  --color-fd-muted: var(--color-muted-beige);
+  --color-fd-muted-foreground: #5a5753;
+  --color-fd-popover: var(--color-cream);
+  --color-fd-popover-foreground: var(--color-charcoal);
+  --color-fd-card: var(--color-cream);
+  --color-fd-card-foreground: var(--color-charcoal);
+  --color-fd-border: var(--color-warm-gray);
+  --color-fd-primary: var(--color-vintage-red);
+  --color-fd-primary-foreground: var(--color-cream);
+  --color-fd-secondary: var(--color-muted-beige);
+  --color-fd-secondary-foreground: var(--color-charcoal);
+  --color-fd-accent: var(--color-muted-beige);
+  --color-fd-accent-foreground: var(--color-charcoal);
 }
 
 body {
@@ -33,25 +47,16 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Base Nintendo 2001 Bevel */
+/* Base Famicom Bevel */
 .panel-bevel {
-  box-shadow: inset 0 2px 0 0 rgba(255, 255, 255, 0.3), inset 0 -2px 0 0 var(--color-chrome-indigo);
-  border: 1px solid var(--color-chrome-indigo);
+  box-shadow: inset 0 2px 0 0 rgba(255, 255, 255, 0.5), inset 0 -2px 0 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border);
 }
 
 .button-bevel {
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5), inset 0 -2px 0 0 rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.5), inset 0 -2px 0 0 rgba(0, 0, 0, 0.2);
 }
 
-/* Halftone Texture for Carbon layers */
-.carbon-panel {
-  background-color: var(--color-carbon);
-  background-image: radial-gradient(var(--color-muted-indigo) 1px, transparent 1px);
-  background-size: 4px 4px;
-}
-
-/* Outline text effect for Hero wordmarks */
 .hero-wordmark {
-  color: white;
-  text-shadow: 2px 2px 0 var(--color-chrome-indigo), -1px -1px 0 var(--color-chrome-indigo), 1px -1px 0 var(--color-chrome-indigo), -1px 1px 0 var(--color-chrome-indigo), 1px 1px 0 var(--color-chrome-indigo);
+  color: var(--color-charcoal);
 }
