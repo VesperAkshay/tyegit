@@ -68,6 +68,7 @@ pub fn get_commit_details(repo: &Repository, commit_id: &str) -> Result<CommitDe
         timestamp: commit.time().seconds(),
         parents,
         refs: Vec::new(),
+        graph_row: None,
     };
 
     let mut files_changed = Vec::new();

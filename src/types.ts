@@ -53,6 +53,24 @@ export interface RefInfo {
   ref_type: RefType;
 }
 
+export interface GraphPath {
+  path: string;
+  color: string;
+}
+
+export interface GraphRow {
+  commit_id: string;
+  dot_color: string;
+  dot_column: number;
+  paths: GraphPath[];
+  has_refs: boolean;
+}
+
+export interface LaneInfo {
+  commit_id: string;
+  color: string;
+}
+
 export interface CommitInfo {
   id: string;
   message: string;
@@ -61,6 +79,14 @@ export interface CommitInfo {
   timestamp: number;
   parents: string[];
   refs: RefInfo[];
+  graph_row: GraphRow | null;
+}
+
+export interface HistoryResult {
+  commits: CommitInfo[];
+  active_lanes: LaneInfo[];
+  next_color_idx: number;
+  max_columns: number;
 }
 
 export interface BranchInfo {

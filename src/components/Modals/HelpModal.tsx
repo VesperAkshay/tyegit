@@ -68,11 +68,12 @@ export default function HelpModal({ onClose }: HelpModalProps) {
             <div className="bg-white border-l-4 border-chrome-indigo p-3 shadow-sm">
               <div className="flex items-center gap-2 font-bold text-ink mb-1">
                 <Tags className="w-4 h-4 text-chrome-indigo" />
-                4. Tags & History
+                4. Tags & History (God-Mode Graph)
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
                 Mark releases using the Tag dropdown (<strong>+ Create Tag</strong>). You can checkout any tag by selecting it. 
-                Switch to the <strong>COMMIT HISTORY</strong> tab to search through your entire timeline and click on any commit to view an inline diff of the changes!
+                Switch to the <strong>COMMIT HISTORY</strong> tab to search through your entire timeline and click on any commit to view an inline diff of the changes! 
+                TyeGit features a <strong>God-Mode Visual Commit Graph</strong> powered by Rust that computes thousands of Bezier-curves seamlessly at 60fps. You can drag the vertical handle between the history list and the diff viewer to resize the layout.
               </p>
             </div>
 

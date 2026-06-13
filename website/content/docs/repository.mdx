@@ -26,3 +26,10 @@ If you have a folder with code, but it doesn't use Git yet, click **INIT REPOSIT
 ## Tips
 
 > If you clone a repository that requires authentication (like a private GitHub repo), TyeGit will automatically prompt you to log in via Device Flow!
+
+## God-Mode Visual Commit Graph (v2.1.0+)
+Once a repository is loaded, navigating to the **COMMIT HISTORY** tab will render TyeGit's bespoke **God-Mode Visual Commit Graph**. 
+Unlike web-based competitors, TyeGit dynamically computes multi-lane topological merges directly in its native Rust core, and streams mathematically perfect SVG Bezier-curves exclusively for the visible viewport slice. This guarantees an infinitely scrollable 60fps topological map even on repositories exceeding 100,000 commits.
+
+* **Resizable Layout**: Click and drag the vertical drag-handle situated between the left history pane and the right diff viewer to optimize your workspace.
+* **Instant Inline Diffs**: Click any commit within the virtualized graph to instantly inspect the exact delta without leaving the view.

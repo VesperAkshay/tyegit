@@ -5,7 +5,7 @@
   <p><strong>The Git client that stays out of your way. Fast. Precise. Built in Rust.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/version-v2.0.0-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
+    <img src="https://img.shields.io/badge/version-v2.1.0-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
     <img src="https://img.shields.io/badge/Rust-Native-orange.svg?style=for-the-badge&logo=rust&color=B12A2A" alt="Rust Native" />
     <img src="https://img.shields.io/badge/Tauri-Backend-yellow.svg?style=for-the-badge&logo=tauri&color=2B2A29" alt="Tauri Backend" />
     <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge&color=2B2A29" alt="License" />
@@ -50,9 +50,9 @@ TyeGit is designed to be the fastest tool for your daily staging and committing 
 | **Line-by-Line Staging** | ✅ | ❌ | ✅ | ✅ |
 | **Editable Index (God-Mode)** | ✅ | ❌ | ❌ | ❌ |
 | **Strict Fast-Forward Default** | ✅ | ❌ | ❌ | ❌ |
-| **Visual Commit Graph** | *Coming Soon* | ❌ | ✅ | ✅ |
+| **Visual Commit Graph** | ✅ (God-Mode) | ❌ | ✅ | ✅ |
 
-*Note: Future development (v1.0+) will expand on interactive rebasing and deep graph analysis to rival enterprise players.*
+*Note: Future development (v2.x) will expand on interactive rebasing and deep graph analysis to rival enterprise players.*
 
 ---
 

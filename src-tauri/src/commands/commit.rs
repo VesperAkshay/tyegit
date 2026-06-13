@@ -62,10 +62,28 @@ pub fn get_commit_file_diff(path: String, commit_id: String, file_path: String) 
 }
 
 #[tauri::command]
-pub fn get_history(path: String, limit: usize, skip: usize, search_query: Option<String>) -> Result<Vec<crate::git::history::CommitInfo>, String> {
+pub fn get_history(
+    path: String, 
+    limit: usize, 
+    skip: usize, 
+    search_query: Option<String>,
+    active_lanes: Option<Vec<crate::git::graph::LaneInfo>>,
+    next_color_idx: Option<usize>,
+    row_height: Option<f64>,
+    column_width: Option<f64>
+) -> Result<crate::git::history::HistoryResult, String> {
     let repo_path = PathBuf::from(&path);
     match repository::open_repository(&repo_path) {
-        Ok(repo) => match crate::git::history::get_history(&repo, limit, skip, search_query) {
+        Ok(repo) => match crate::git::history::get_history(
+            &repo, 
+            limit, 
+            skip, 
+            search_query, 
+            active_lanes, 
+            next_color_idx,
+            row_height.unwrap_or(48.0),
+            column_width.unwrap_or(14.0)
+        ) {
             Ok(history) => Ok(history),
             Err(e) => Err(format!("Failed to get history: {}", e.message())),
         },
