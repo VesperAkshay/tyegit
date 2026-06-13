@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - The Auto-Updater & God-Mode Graph
+### Added
+- **Secure Auto-Updater:** TyeGit now natively supports downloading and installing updates without leaving the app. You can manually check for updates via the new Settings panel.
+- **God-Mode Visual Commit Graph:** A custom, Rust-powered topological merge graph that streams Beziers at 60fps for infinitely scrollable commit history.
+- **Resizable Sidebars:** You can now drag the vertical layout handle to optimize the History and Diff viewer panels.
+
+## [2.1.0] - Skipped (Merged into 2.2.0)
+
+
 ## [2.0.0] - The Rebranding & Documentation Update
 ### Added
 - **Major Rebranding:** Renamed the application from "Git Desktop" to "TyeGit".

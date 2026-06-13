@@ -4,7 +4,10 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { join } from "@tauri-apps/api/path";
 import { FolderGit2, Download, PlusSquare, Clock, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+import { check } from "@tauri-apps/plugin-updater";
 import HelpModal from "../components/Modals/HelpModal";
+import SettingsModal from "../components/Modals/SettingsModal";
+import UpdateModal from "../components/Modals/UpdateModal";
 
 interface RecentRepo {
   id: number;
@@ -37,6 +40,25 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
   const [recentRepos, setRecentRepos] = useState<RecentRepo[]>([]);
   const [remoteRepos, setRemoteRepos] = useState<GithubRepository[]>([]);
   const [isCloudLoading, setIsCloudLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [updateData, setUpdateData] = useState<any>(null);
+
+  useEffect(() => {
+    async function checkForUpdates() {
+      try {
+        const saved = localStorage.getItem("tyegit-auto-update");
+        if (saved !== "false") { // Defaults to true
+          const update = await check();
+          if (update) {
+            setUpdateData(update);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to check for updates on startup", e);
+      }
+    }
+    checkForUpdates();
+  }, []);
 
   useEffect(() => {
     async function loadRecentRepos() {
@@ -206,7 +228,12 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
           <div className="flex gap-4">
             <span className="nav-link text-nav-gold">START</span>
             <span className="nav-link text-canvas-soft">RECENT</span>
-            <span className="nav-link text-canvas-soft">SETTINGS</span>
+            <span 
+              className="nav-link text-canvas-soft hover:text-white cursor-pointer transition-colors"
+              onClick={() => setShowSettings(true)}
+            >
+              SETTINGS
+            </span>
           </div>
           <div className="flex gap-2">
             <button 
@@ -219,6 +246,8 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
         </div>
 
         {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} onUpdateFound={setUpdateData} />}
+        {updateData && <UpdateModal update={updateData} onClose={() => setUpdateData(null)} />}
 
         {error && (
           <div className="mt-2 bg-white border border-primary p-2 text-primary font-bold text-xs shadow-sm">

@@ -1,6 +1,6 @@
 [package]
 name = "tyegit"
-version = "2.1.0"
+version = "2.2.0"
 description = "A fast, tactile Git client built in Rust."
 authors = ["you"]
 edition = "2021"
@@ -29,3 +29,5 @@ thiserror = "2.0"
 tauri-plugin-dialog = "2.7.1"
 fuzzy-matcher = "0.3.7"
 reqwest = { version = "0.13.4", features = ["json"] }
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"

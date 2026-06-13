@@ -12,7 +12,7 @@ export default function Home() {
       {/* ----------------- LAYER 1: MARKETING HERO ----------------- */}
       <section className="flex flex-col items-center text-center space-y-8 mt-12">
         <div className="bg-charcoal text-cream font-mono text-xs px-3 py-1 rounded-full border border-warm-gray mb-4">
-          TyeGit v2.1.0 is now available
+          TyeGit v2.2.0 is now available
         </div>
         
         <h1 className="hero-wordmark text-6xl md:text-8xl font-black tracking-tighter text-charcoal">
