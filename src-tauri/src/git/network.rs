@@ -1,7 +1,44 @@
 use git2::{Repository, RemoteCallbacks, FetchOptions, PushOptions, Cred};
+use serde::{Serialize, Deserialize};
 
-pub fn fetch_remote(repo: &Repository, token: &str) -> Result<(), git2::Error> {
-    let mut remote = repo.find_remote("origin")?;
+#[derive(Serialize, Deserialize)]
+pub struct RemoteInfo {
+    pub name: String,
+    pub url: String,
+}
+
+pub fn list_remotes(repo: &Repository) -> Result<Vec<RemoteInfo>, git2::Error> {
+    let remotes_array = repo.remotes()?;
+    let mut results = Vec::new();
+    
+    for name_opt in remotes_array.iter() {
+        if let Some(name) = name_opt {
+            if let Ok(remote) = repo.find_remote(name) {
+                if let Some(url) = remote.url() {
+                    results.push(RemoteInfo {
+                        name: name.to_string(),
+                        url: url.to_string(),
+                    });
+                }
+            }
+        }
+    }
+    
+    Ok(results)
+}
+
+pub fn add_remote(repo: &Repository, name: &str, url: &str) -> Result<(), git2::Error> {
+    repo.remote(name, url)?;
+    Ok(())
+}
+
+pub fn remove_remote(repo: &Repository, name: &str) -> Result<(), git2::Error> {
+    repo.remote_delete(name)?;
+    Ok(())
+}
+
+pub fn fetch_remote(repo: &Repository, remote_name: &str, token: &str) -> Result<(), git2::Error> {
+    let mut remote = repo.find_remote(remote_name)?;
     
     let mut callbacks = RemoteCallbacks::new();
     let token_clone = token.to_string();
@@ -12,13 +49,15 @@ pub fn fetch_remote(repo: &Repository, token: &str) -> Result<(), git2::Error> {
     let mut fetch_options = FetchOptions::new();
     fetch_options.remote_callbacks(callbacks);
     
-    remote.fetch(&["refs/heads/*:refs/remotes/origin/*"], Some(&mut fetch_options), None)?;
+    // We construct a dynamic refspec for the given remote
+    let refspec = format!("refs/heads/*:refs/remotes/{}/*", remote_name);
+    remote.fetch(&[&refspec], Some(&mut fetch_options), None)?;
     
     Ok(())
 }
 
-pub fn push_remote(repo: &Repository, token: &str) -> Result<(), git2::Error> {
-    let mut remote = repo.find_remote("origin")?;
+pub fn push_remote(repo: &Repository, remote_name: &str, token: &str) -> Result<(), git2::Error> {
+    let mut remote = repo.find_remote(remote_name)?;
     
     let mut callbacks = RemoteCallbacks::new();
     let token_clone = token.to_string();
@@ -35,11 +74,17 @@ pub fn push_remote(repo: &Repository, token: &str) -> Result<(), git2::Error> {
     
     remote.push(&[&refspec], Some(&mut push_options))?;
     
+    // Set upstream tracking to the selected remote
+    if let Ok(mut branch) = repo.find_branch(branch_name, git2::BranchType::Local) {
+        let upstream_name = format!("{}/{}", remote_name, branch_name);
+        let _ = branch.set_upstream(Some(&upstream_name));
+    }
+    
     Ok(())
 }
 
-pub fn pull_remote(repo: &Repository, token: &str) -> Result<(), git2::Error> {
-    fetch_remote(repo, token)?;
+pub fn pull_remote(repo: &Repository, remote_name: &str, token: &str) -> Result<(), git2::Error> {
+    fetch_remote(repo, remote_name, token)?;
     
     let fetch_head = repo.find_reference("FETCH_HEAD")?;
     let fetch_commit = repo.reference_to_annotated_commit(&fetch_head)?;

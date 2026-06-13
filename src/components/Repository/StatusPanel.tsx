@@ -13,8 +13,13 @@ interface StatusPanelProps {
   onUnstage: (filePath: string, e: React.MouseEvent) => void;
   onStageAll: () => void;
   onUnstageAll: () => void;
+  onDiscard: (filePath: string, e: React.MouseEvent) => void;
+  onIgnore: (filePath: string, e: React.MouseEvent) => void;
   commitMessage: string;
   setCommitMessage: (msg: string) => void;
+  isAmending: boolean;
+  setIsAmending: (amending: boolean) => void;
+  headCommitMessage: string;
   onCommit: () => void;
   committing: boolean;
   onStash: () => void;
@@ -49,8 +54,8 @@ const StatusBadge = ({ file }: { file: FileStatus }) => {
 
 export default function StatusPanel({
   stagedFiles, unstagedFiles, stashes, repoState, mergeStatus, selectedFile, onSelectFile,
-  onStage, onUnstage, onStageAll, onUnstageAll,
-  commitMessage, setCommitMessage, onCommit, committing,
+  onStage, onUnstage, onStageAll, onUnstageAll, onDiscard, onIgnore,
+  commitMessage, setCommitMessage, isAmending, setIsAmending, headCommitMessage, onCommit, committing,
   onStash, onStashApply, onStashPop, onStashDrop, onAbortMerge
 }: StatusPanelProps) {
   return (
@@ -120,9 +125,19 @@ export default function StatusPanel({
                 <StatusBadge file={file} />
                 <span className="truncate">{file.file_path}</span>
               </div>
-              <button onClick={(e) => onStage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-systems-teal hover:bg-systems-teal/10 p-0.5 rounded ml-2">
-                <Plus className="w-3 h-3" />
-              </button>
+              <div className="flex items-center shrink-0">
+                {(file.status.includes("Untracked")) && (
+                  <button onClick={(e) => onIgnore(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-nav-gold hover:bg-nav-gold/10 p-0.5 rounded ml-1" title="Add to .gitignore">
+                    <ArchiveRestore className="w-3 h-3" />
+                  </button>
+                )}
+                <button onClick={(e) => onDiscard(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-1" title="Discard Changes">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+                <button onClick={(e) => onStage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-systems-teal hover:bg-systems-teal/10 p-0.5 rounded ml-1" title="Stage File">
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -164,6 +179,24 @@ export default function StatusPanel({
           value={commitMessage}
           onChange={e => setCommitMessage(e.target.value)}
         />
+        <div className="flex items-center gap-2 mb-2 px-1">
+          <input 
+            type="checkbox" 
+            id="amendCheck" 
+            checked={isAmending} 
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setIsAmending(checked);
+              if (checked && !commitMessage.trim()) {
+                setCommitMessage(headCommitMessage);
+              }
+            }} 
+            className="w-3 h-3 accent-systems-teal"
+          />
+          <label htmlFor="amendCheck" className="text-[10px] font-bold text-ink-soft cursor-pointer select-none">
+            AMEND LAST COMMIT
+          </label>
+        </div>
         <div className="flex gap-2">
           <button 
             onClick={onStash}

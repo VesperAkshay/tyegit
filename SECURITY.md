@@ -8,8 +8,8 @@ Only the latest active release branch receives security updates. We recommend al
 
 | Version | Supported          |
 | ------- | ------------------ |
-| v0.2.x  | ✅ Yes (Current)   |
-| < v0.2  | ❌ No              |
+| v2.0.x  | ✅ Yes (Current)   |
+| < v2.0  | ❌ No              |
 
 ## Reporting a Vulnerability
 

@@ -38,7 +38,8 @@ export default function HelpModal({ onClose }: HelpModalProps) {
               </div>
               <p className="text-xs text-ink-soft leading-relaxed">
                 The <strong>LOCAL STATUS</strong> tab shows your working tree. Use the <span className="font-mono bg-platinum px-1">+</span> to stage files and <span className="font-mono bg-platinum px-1">-</span> to unstage them. 
-                Write a message in the bottom box and hit <strong>COMMIT</strong> to save the snapshot. You can also use <strong>STAGE ALL</strong> to bulk-add files.
+                You can also <strong>Discard</strong> changes or add untracked files to <strong>.gitignore</strong>.
+                Write a message in the bottom box and hit <strong>COMMIT</strong> to save the snapshot. Check <strong>AMEND</strong> to modify the previous commit!
               </p>
             </div>
 

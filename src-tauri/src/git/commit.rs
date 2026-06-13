@@ -61,3 +61,27 @@ pub fn commit(repo: &Repository, message: &str) -> Result<(), git2::Error> {
 
     Ok(())
 }
+
+pub fn commit_amend(repo: &Repository, message: &str) -> Result<(), git2::Error> {
+    let mut index = repo.index()?;
+    let oid = index.write_tree()?;
+    let signature = repo.signature().unwrap_or_else(|_| {
+        Signature::now("Git Desktop", "git@desktop.local").unwrap()
+    });
+
+    let tree = repo.find_tree(oid)?;
+    
+    let head = repo.head()?;
+    let head_commit = head.peel_to_commit()?;
+
+    head_commit.amend(
+        Some("HEAD"),
+        Some(&signature),
+        Some(&signature),
+        None,
+        Some(message),
+        Some(&tree)
+    )?;
+
+    Ok(())
+}

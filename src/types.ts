@@ -80,3 +80,8 @@ export interface StashInfo {
   message: string;
   commit_id: string;
 }
+
+export interface RemoteInfo {
+  name: string;
+  url: string;
+}

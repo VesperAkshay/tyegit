@@ -2,12 +2,13 @@ import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { History } from "lucide-react";
 
-import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails } from "../types";
+import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails, RemoteInfo } from "../types";
 
 import AuthModal from "../components/Modals/AuthModal";
 import BranchModal from "../components/Modals/BranchModal";
 import TagModal from "../components/Modals/TagModal";
 import MergeModal from "../components/Modals/MergeModal";
+import RemoteModal from "../components/Modals/RemoteModal";
 import RepositoryHeader from "../components/Repository/RepositoryHeader";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
@@ -27,14 +28,17 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   const [commits, setCommits] = useState<CommitInfo[]>([]);
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [tags, setTags] = useState<TagInfo[]>([]);
+  const [remotes, setRemotes] = useState<RemoteInfo[]>([]);
   const [stashes, setStashes] = useState<StashInfo[]>([]);
   const [repoState, setRepoState] = useState<RepositoryState>("Clean");
   const [mergeStatus, setMergeStatus] = useState<MergeStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  const [activeRemote, setActiveRemote] = useState<string>("");
   const [commitMessage, setCommitMessage] = useState("");
   const [committing, setCommitting] = useState(false);
+  const [isAmending, setIsAmending] = useState(false);
 
   // GitHub integration state
   const [ownerRepo, setOwnerRepo] = useState<{owner: string, repo: string} | null>(null);
@@ -57,17 +61,14 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   const [pendingAction, setPendingAction] = useState<"push" | "pull" | "fetch" | null>(null);
   const [syncing, setSyncing] = useState(false);
 
-  // Branch creation state
+  // Modals state
   const [showNewBranch, setShowNewBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
-
-  // Tag creation state
   const [showNewTag, setShowNewTag] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [tagMessage, setTagMessage] = useState("");
-
-  // Merge state
   const [showMergeModal, setShowMergeModal] = useState(false);
+  const [showRemoteModal, setShowRemoteModal] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,7 +77,17 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
   const loadingMoreHistory = useRef(false);
 
-  // Debounce search query
+  // Trigger diff viewer reloads
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
+  const handleChangeRemote = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === "__MANAGE_REMOTES__") {
+      setShowRemoteModal(true);
+    } else {
+      setActiveRemote(e.target.value);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
@@ -88,11 +99,12 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     try {
       setLoading(true);
       setError(null);
-      const [statusRes, branchesRes, historyRes, tagsRes, stashesRes, stateRes, urlRes] = await Promise.all([
+      const [statusRes, branchesRes, historyRes, tagsRes, remotesRes, stashesRes, stateRes, urlRes] = await Promise.all([
         invoke<FileStatus[]>("git_status", { path: repoPath }),
         invoke<BranchInfo[]>("list_branches", { path: repoPath }),
         invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: 0, searchQuery: debouncedQuery }),
         invoke<TagInfo[]>("list_tags", { path: repoPath }),
+        invoke<RemoteInfo[]>("list_remotes", { path: repoPath }),
         invoke<StashInfo[]>("list_stashes", { path: repoPath }),
         invoke<RepositoryState>("get_repo_state", { path: repoPath }),
         invoke<string | null>("get_remote_url", { path: repoPath })
@@ -104,9 +116,15 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       setHistoryOffset(0);
       setHasMoreHistory(historyRes.length === 50);
       setTags(tagsRes);
+      setRemotes(remotesRes);
       setStashes(stashesRes);
       setRepoState(stateRes);
       
+      if (!activeRemote && remotesRes.length > 0) {
+        const origin = remotesRes.find(r => r.name === "origin");
+        setActiveRemote(origin ? origin.name : remotesRes[0].name);
+      }
+
       let newOwnerRepo = null;
       if (urlRes && urlRes.includes("github.com")) {
         const parts = urlRes.split(/github\.com[\/:]/);
@@ -117,11 +135,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
             setOwnerRepo(newOwnerRepo);
           }
         }
-      } else {
-        setOwnerRepo(null);
       }
-      setStashes(stashesRes);
-      setRepoState(stateRes);
       
       if (stateRes === "Merge") {
         const mStatus = await invoke<MergeStatus>("get_merge_status", { path: repoPath });
@@ -138,6 +152,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
           setDiffText(null);
         }
       }
+      setRefreshCounter(c => c + 1);
     } catch (err) {
       setError(err as string);
     } finally {
@@ -168,7 +183,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     loadData();
   }, [repoPath, debouncedQuery]);
 
-  // Fetch avatars when ownerRepo changes
   useEffect(() => {
     async function fetchAvatars() {
       if (ownerRepo && pat) {
@@ -194,7 +208,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   }, [ownerRepo, pat]);
 
   useEffect(() => {
-    // Reset selected commit state when changing repo or searching
     setSelectedCommitId(null);
     setCommitDetails(null);
     setSelectedCommitFile(null);
@@ -226,7 +239,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     fetchDiff();
   }, [selectedFile, repoPath]);
 
-  // Status Actions
   const handleStage = async (filePath: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -257,17 +269,40 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     try { await invoke("unstage_all", { path: repoPath }); await loadData(); } catch (err) { setError(err as string); }
   };
 
+  const handleDiscard = async (filePath: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to discard changes in ${filePath}?`)) return;
+    try {
+      await invoke("discard_file", { path: repoPath, filePath });
+      await loadData();
+      if (selectedFile?.path === filePath) setSelectedFile(null);
+    } catch (err) { setError(err as string); }
+  };
+
+  const handleIgnore = async (filePath: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await invoke("add_to_gitignore", { path: repoPath, filePath });
+      await loadData();
+      if (selectedFile?.path === filePath) setSelectedFile(null);
+    } catch (err) { setError(err as string); }
+  };
+
   const handleCommit = async () => {
     if (!commitMessage.trim()) return;
     try {
       setCommitting(true);
-      await invoke("commit", { path: repoPath, message: commitMessage });
+      if (isAmending) {
+        await invoke("commit_amend", { path: repoPath, message: commitMessage });
+        setIsAmending(false);
+      } else {
+        await invoke("commit", { path: repoPath, message: commitMessage });
+      }
       setCommitMessage("");
       await loadData();
     } catch (err) { setError(err as string); } finally { setCommitting(false); }
   };
 
-  // Merge Actions
   const handleMergeBranch = async (branchName: string) => {
     try {
       setLoading(true);
@@ -285,7 +320,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     } catch (err) { setError(err as string); setLoading(false); }
   };
 
-  // Stash Actions
   const handleStash = async () => {
     try {
       setLoading(true);
@@ -319,7 +353,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     } catch (err) { setError(err as string); setLoading(false); }
   };
 
-  // Commit Details Actions
   const handleSelectCommit = async (commitId: string) => {
     setSelectedCommitId(commitId);
     setCommitDiffLoading(true);
@@ -355,7 +388,6 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     }
   };
 
-  // Branch Actions
   const handleSwitchBranch = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const target = e.target.value;
     if (target === "__CREATE_NEW__") {
@@ -382,15 +414,13 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     } catch (err) { setError(err as string); setLoading(false); }
   };
 
-  // Tag Actions
   const handleSwitchTag = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const target = e.target.value;
-    e.target.value = ""; // Reset dropdown
+    e.target.value = "";
     if (target === "__CREATE_NEW__") {
       setShowNewTag(true);
       return;
     }
-    // Checkout the tag
     try {
       setLoading(true);
       await invoke("checkout_tag", { path: repoPath, tagName: target });
@@ -410,8 +440,11 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     } catch (err) { setError(err as string); setLoading(false); }
   };
 
-  // Network Actions
   const handleNetworkAction = async (action: "push" | "pull" | "fetch") => {
+    if (!activeRemote) {
+      setError("No remote configured");
+      return;
+    }
     if (!pat) {
       setPendingAction(action);
       setShowAuthModal(true);
@@ -424,9 +457,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     try {
       setSyncing(true);
       setError(null);
-      if (action === "fetch") await invoke("fetch_remote", { path: repoPath, token: tokenToUse });
-      if (action === "pull") await invoke("pull_remote", { path: repoPath, token: tokenToUse });
-      if (action === "push") await invoke("push_remote", { path: repoPath, token: tokenToUse });
+      await invoke(`${action}_remote`, { path: repoPath, remoteName: activeRemote, token: tokenToUse });
       await loadData();
     } catch (err) {
       setError(err as string);
@@ -474,16 +505,33 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
         />
       )}
 
+      {showRemoteModal && (
+        <RemoteModal 
+          repoPath={repoPath} remotes={remotes} 
+          onClose={() => setShowRemoteModal(false)} onRefresh={loadData} 
+        />
+      )}
+
       <div className="w-full max-w-6xl flex flex-col">
         <RepositoryHeader 
-          onClose={onClose} branches={branches} tags={tags} currentBranch={currentBranch}
-          onSwitchBranch={handleSwitchBranch} onSwitchTag={handleSwitchTag} onNetworkAction={handleNetworkAction}
-          onRefresh={loadData} onMergeClick={() => setShowMergeModal(true)} syncing={syncing} loading={loading}
+          onClose={onClose} 
+          branches={branches} 
+          tags={tags} 
+          remotes={remotes}
+          activeRemote={activeRemote}
+          currentBranch={currentBranch}
+          onSwitchBranch={handleSwitchBranch} 
+          onSwitchTag={handleSwitchTag} 
+          onChangeRemote={handleChangeRemote}
+          onNetworkAction={handleNetworkAction}
+          onRefresh={loadData} 
+          onMergeClick={() => setShowMergeModal(true)} 
+          syncing={syncing} 
+          loading={loading}
         />
 
         {error && <div className="bg-primary text-white text-xs font-bold p-2 mb-2 border-2 border-carbon shadow-[2px_2px_0px_rgba(33,36,46,1)]">{error}</div>}
 
-        {/* Tab Selector */}
         <div className="flex gap-1 mb-2">
           <button 
             onClick={() => setActiveTab("status")}
@@ -521,7 +569,9 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                     selectedFile={selectedFile} onSelectFile={setSelectedFile}
                     onStage={handleStage} onUnstage={handleUnstage}
                     onStageAll={handleStageAll} onUnstageAll={handleUnstageAll}
+                    onDiscard={handleDiscard} onIgnore={handleIgnore}
                     commitMessage={commitMessage} setCommitMessage={setCommitMessage}
+                    isAmending={isAmending} setIsAmending={setIsAmending} headCommitMessage={commits[0]?.message || ""}
                     onCommit={handleCommit} committing={committing}
                     onStash={handleStash} onStashApply={handleStashApply} 
                     onStashPop={handleStashPop} onStashDrop={handleStashDrop}
@@ -545,12 +595,15 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
 
               {/* Right Rail */}
               <DiffViewer 
+                repoPath={repoPath}
                 activeTab={activeTab} selectedFile={selectedFile} 
                 diffLoading={activeTab === "status" ? diffLoading : commitDiffLoading} 
                 diffText={activeTab === "status" ? diffText : commitDiffText} 
                 commitDetails={commitDetails}
                 selectedCommitFile={selectedCommitFile}
                 onSelectCommitFile={handleSelectCommitFile}
+                onRefresh={loadData}
+                refreshCounter={refreshCounter}
               />
             </>
           )}

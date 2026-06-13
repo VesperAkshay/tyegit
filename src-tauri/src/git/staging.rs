@@ -28,3 +28,79 @@ pub fn unstage_all(repo: &Repository) -> Result<(), git2::Error> {
     repo.reset_default(Some(head.as_object()), ["*"])?;
     Ok(())
 }
+
+pub fn discard_file(repo: &Repository, path: &str) -> Result<(), git2::Error> {
+    let repo_path = repo.workdir().ok_or_else(|| git2::Error::from_str("Bare repo"))?;
+    let full_path = repo_path.join(path);
+    
+    // Get file status to see if it's untracked
+    if let Ok(status) = repo.status_file(Path::new(path)) {
+        if status.contains(git2::Status::WT_NEW) {
+            // Untracked file: simply delete it
+            if full_path.exists() {
+                let _ = std::fs::remove_file(full_path);
+            }
+            return Ok(());
+        }
+    }
+
+    // Tracked file: checkout from HEAD
+    let mut checkout_builder = git2::build::CheckoutBuilder::new();
+    checkout_builder.path(path).force();
+    repo.checkout_head(Some(&mut checkout_builder))?;
+    Ok(())
+}
+
+pub fn add_to_gitignore(repo: &Repository, path: &str) -> Result<(), git2::Error> {
+    let repo_path = repo.workdir().ok_or_else(|| git2::Error::from_str("Bare repo"))?;
+    let gitignore_path = repo_path.join(".gitignore");
+    
+    use std::io::Write;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(gitignore_path)
+        .map_err(|e| git2::Error::from_str(&format!("Failed to open .gitignore: {}", e)))?;
+        
+    writeln!(file, "{}", path)
+        .map_err(|e| git2::Error::from_str(&format!("Failed to write to .gitignore: {}", e)))?;
+        
+    Ok(())
+}
+
+pub fn stage_file_from_text(repo: &Repository, path: &str, text: &str) -> Result<(), git2::Error> {
+    let mut index = repo.index()?;
+    let oid = repo.blob(text.as_bytes())?;
+    
+    let normalized_path = path.replace("\\", "/");
+    
+    let (ctime, mtime, mode) = if let Some(entry) = index.get_path(Path::new(&normalized_path), 0) {
+        (entry.ctime, entry.mtime, entry.mode)
+    } else {
+        // we can just use 0 directly if we can't construct IndexTime. Wait, how to create IndexTime?
+        // Let's just create a new empty IndexEntry and modify what we need!
+        // git2::IndexEntry doesn't implement Default.
+        // We can just construct a dummy file and get its IndexEntry?
+        // Let's use `git2::IndexTime::new(0, 0)`
+        (git2::IndexTime::new(0, 0), git2::IndexTime::new(0, 0), 0o100644)
+    };
+
+    let entry = git2::IndexEntry {
+        ctime,
+        mtime,
+        dev: 0,
+        ino: 0,
+        mode,
+        uid: 0,
+        gid: 0,
+        file_size: text.len() as u32,
+        id: oid,
+        flags: 0,
+        flags_extended: 0,
+        path: normalized_path.as_bytes().to_vec(),
+    };
+    
+    index.add(&entry)?;
+    index.write()?;
+    Ok(())
+}

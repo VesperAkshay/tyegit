@@ -1,92 +1,120 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Git-Desktop_v1.1.0-3d4f97?style=for-the-badge&logo=git&logoColor=white" alt="Git Desktop v1.1.0" />
-  <h1>Git Desktop</h1>
-  <p><strong>A modern, fast, AI-ready Git desktop client built for developers.</strong></p>
-  <br/>
-  <a href="https://github.com/VesperAkshay/tyegit/releases/latest">
-    <img src="https://img.shields.io/badge/Download-Latest_Release-f68d1f?style=for-the-badge&logo=github&logoColor=white" alt="Download Latest Release" />
-  </a>
+  <img src="website/public/tyegit-logo.png" alt="TyeGit Logo" width="120" />
+
+  <h1>TyeGit</h1>
+  <p><strong>The Git client that stays out of your way. Fast. Precise. Built in Rust.</strong></p>
+
+  <p>
+    <img src="https://img.shields.io/badge/version-v2.0.0-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
+    <img src="https://img.shields.io/badge/Rust-Native-orange.svg?style=for-the-badge&logo=rust&color=B12A2A" alt="Rust Native" />
+    <img src="https://img.shields.io/badge/Tauri-Backend-yellow.svg?style=for-the-badge&logo=tauri&color=2B2A29" alt="Tauri Backend" />
+    <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge&color=2B2A29" alt="License" />
+  </p>
+  
+  <p>
+    <a href="https://github.com/VesperAkshay/tyegit/releases/latest">Download Latest Release</a>
+    ·
+    <a href="https://github.com/VesperAkshay/tyegit/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/VesperAkshay/tyegit/issues">Request Feature</a>
+  </p>
 </div>
 
 ---
 
 ## 🚀 Overview
 
-Git Desktop aims to provide a powerful yet intuitive Git client that combines the reliability of the official Git implementation with the blistering performance of native Rust. Designed to make Git easier for developers without hiding its underlying power, it features a stunning **"Nintendo 2001" retro-futuristic aesthetic**—a highly tactile interface constructed from brushed-periwinkle metal plates and chamfered panels.
+TyeGit is a lighting-fast, precision Git client built for developers who want the tactile speed of the CLI with the visual clarity of a GUI.
+
+We abandoned bulky Electron and Chromium layers to build a sleek **Rust + Tauri** backend. This allows TyeGit to communicate directly with native Git binaries, ensuring instant repository loading, 60fps diff rendering, and an incredibly low memory footprint.
+
+## ✨ Core Workflows
+
+### 1. Surgical Precision
+Stage line-by-line or by hunk using our embedded "God-Mode" diff editor. Open the index, edit code directly before committing, and maintain total control over your Git history.
+
+### 2. Built-in Guardrails
+We enforce fast-forward pulls by default and prevent accidental merges into protected branches. If timelines collide, TyeGit enters a dedicated `MERGE` state, flagging conflicting files so you can resolve them before disaster strikes.
+
+### 3. Multi-Remote Mastery
+Manage upstream and origin effortlessly. Sync forks, push to multiple remotes, and track upstream branches with a single click. Authentic GitHub Device Flow authentication ensures secure, token-based network syncing.
+
+## 📊 How We Compare
+
+TyeGit is designed to be the fastest tool for your daily staging and committing workflows.
+
+| Feature | TyeGit | GitHub Desktop | GitKraken | Tower |
+| :--- | :---: | :---: | :---: | :---: |
+| **Open Source** | ✅ | ✅ | ❌ | ❌ |
+| **Native App (No Electron)** | ✅ (Rust/Tauri) | ❌ | ❌ | ✅ |
+| **Line-by-Line Staging** | ✅ | ❌ | ✅ | ✅ |
+| **Editable Index (God-Mode)** | ✅ | ❌ | ❌ | ❌ |
+| **Strict Fast-Forward Default** | ✅ | ❌ | ❌ | ❌ |
+| **Visual Commit Graph** | *Coming Soon* | ❌ | ✅ | ✅ |
+
+*Note: Future development (v1.0+) will expand on interactive rebasing and deep graph analysis to rival enterprise players.*
 
 ---
 
-## ✨ Features (v1.1.0)
+## 🛠️ Architecture
 
-### 1. Robust Local Management
-- **Global Quick Switcher:** Press `Ctrl+K` (or `Cmd+K`) anywhere to open the Command Palette and instantly switch between your recent repositories!
-- **Instant Staging:** Stage (`+`), unstage (`-`), or bulk-process your changes instantly.
-- **Status Dashboard:** A clean, segmented view of modified, added, deleted, renamed, and untracked files.
-- **Fluid Committing:** Write commit messages and push to your local timeline effortlessly.
+TyeGit utilizes a highly optimized **Inter-Process Communication (IPC)** bridge.
+- **Frontend:** React 19, TypeScript, TailwindCSS v4, Framer Motion.
+- **Backend:** Rust, Tauri 2.0, `git2-rs`.
+- **Documentation:** Fumadocs.
 
-### 2. High-Performance History & Search
-- **Infinite Timeline:** Fluidly scroll through your entire repository history, viewing commit details, authors, and SHAs.
-- **Fuzzy Search:** Filter commit history in real-time. Simply type an author name or a message snippet to locate commits instantly (debounced for extreme performance).
-- **Inline Diff Viewer:** Click on any commit or staged file to view a beautiful inline diff, highlighting exact line additions and deletions.
-
-### 3. Advanced Git Operations
-- **V2 Merge Engine:** Perform true 3-way merges directly from the UI. Select any branch and merge it into your active timeline safely.
-- **Smart Conflict Detection:** When timelines collide, the application enters a distinct `MERGE` state. Conflicting files are flagged with bright red `!` badges, allowing you to resolve them in your preferred editor before finalizing the merge.
-- **Stashing:** Need to context switch? Click **STASH** to securely save your staged, unstaged, and untracked files. Later, you can **Apply**, **Pop**, or **Drop** your stashes.
-
-### 4. Branching & Tagging
-- **Seamless Branching:** Spin off new branches or checkout existing ones instantly using the sleek, keyboard-friendly Branch Modal.
-- **Tag Management:** Create lightweight tags to mark milestones and releases, equipped with optional tag messages.
-
-### 5. Deep GitHub Integration (New!)
-- **PRs & Issues Dashboard:** Open the **GITHUB** tab to view your repository's open Pull Requests and Issues in a sleek dashboard, fully hyperlinked.
-- **Timeline Avatars:** Commit authors' GitHub profile pictures are automatically loaded natively into the Commit History timeline!
-- **CI/CD Status Badges:** The timeline lazily queries your GitHub Actions Check Runs and renders beautiful status badges (Success, Failure, Pending) inline with your commits.
-- **1-Click Publishing:** Initialized a local project? Jump to the GitHub tab to instantly publish it to the cloud with one click.
-- **Secure Network Sync:** Fetch, Pull, and Push with seamless Personal Access Token (PAT) authentication.
+The frontend is strictly responsible for rendering the UI and handling user interactions. It has no direct access to the filesystem. When you trigger an action, the frontend sends an IPC message to the Rust backend, which natively executes the highly-optimized Git operation and streams the new repository state back in fractions of a millisecond.
 
 ---
 
-## 🛠️ Technology Stack
-
-Built for maximum efficiency, speed, and safety.
-
-- **Frontend:** React 19, TypeScript, TailwindCSS, Framer Motion, and Lucide Icons.
-- **Backend Core:** Rust and Tauri 2.0.
-- **Git Engine:** `git2-rs` (libgit2 bindings for Rust) ensuring complete repository integrity.
-- **Architecture:** Driven by a pure Repository State Machine. The backend strictly isolates Git logic, communicating with the UI solely via high-speed Tauri IPC commands.
-
----
-
-## 💻 Getting Started
+## 💻 Installation & Development
 
 ### Prerequisites
 1. **Rust Toolchain:** Install via [rustup.rs](https://rustup.rs/).
-2. **JavaScript Runtime:** Install [Bun](https://bun.sh/) (or Node.js).
-3. **Tauri CLI:** Follow the [Tauri Prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites) for your operating system.
+2. **JavaScript Runtime:** Install [Bun](https://bun.sh/).
+3. **Tauri CLI:** Follow the [Tauri Prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites) for your OS.
 
-### Installation
+### Building from Source
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/VesperAkshay/tyegit.git
-   cd tyegit
-   ```
+```bash
+git clone https://github.com/VesperAkshay/tyegit.git
+cd tyegit
+```
 
 2. Install dependencies:
-   ```bash
-   bun install
-   ```
+```bash
+bun install
+```
 
 3. Launch the development server:
-   ```bash
-   bun run tauri dev
-   ```
+```bash
+bun run tauri dev
+```
 
-4. The Rust backend will compile, and the React window will launch. Click **OPEN REPOSITORY**, select a `.git` initialized folder, and experience Git like never before!
+4. Launch the documentation website:
+```bash
+cd website
+bun install
+bun run dev
+```
 
 ---
 
+## 🤝 Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
 <div align="center">
-  <small>© 2026 Git Desktop. Built with Tauri & Rust.</small>
+  <small>© 2026 TyeGit. Built with Tauri & Rust.</small>
 </div>
