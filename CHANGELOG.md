@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] - Updater Fix
+### Fixed
+- Fixed Tauri v2 configuration missing `createUpdaterArtifacts`, causing GitHub Actions to not upload `.zip` update bundles.
+
 ## [2.2.1] - Auth Hotfix
 ### Fixed
 - Fixed an issue where GitHub Device Flow authentication would fail on compiled `.msi` builds due to missing Client ID environment variables in CI.
