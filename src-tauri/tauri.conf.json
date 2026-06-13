@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "TyeGit",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "identifier": "com.vesper.tyegit",
   "build": {
     "beforeDevCommand": "bun run dev",
@@ -26,7 +26,7 @@
       "endpoints": [
         "https://akshaypatel.me/tyegit/updater.json"
       ],
-      "pubkey": "RWR5h+zgzvoH7j86yOwgQ+8wW/rEyiTsFTUyy42FTLsx26BxJ/bLIXDL"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVFMDdGQUNFRTBFQzg3NzkKUldSNWgremd6dm9IN2o4NnlPd2dRKzh3Vy9yRXlpVHNGVFV5eTQyRlRMc3gyNkJ4Si9iTElYREwK"
     }
   },
   "bundle": {

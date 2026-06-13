@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.3] - Updater Key Fix
+### Fixed
+- Fixed an issue where the `pubkey` in `tauri.conf.json` was improperly formatted, causing the GitHub Actions build to fail during signature generation.
+
 ## [2.2.2] - Updater Fix
 ### Fixed
 - Fixed Tauri v2 configuration missing `createUpdaterArtifacts`, causing GitHub Actions to not upload `.zip` update bundles.
