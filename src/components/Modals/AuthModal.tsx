@@ -26,7 +26,7 @@ interface AccessTokenResponse {
   error_description?: string;
 }
 
-const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "Ov23liFORPl2NxxUaOAl";
 
 export default function AuthModal({ pendingAction, setPat, syncing, onCancel, onAuthenticate }: AuthModalProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceCodeResponse | null>(null);

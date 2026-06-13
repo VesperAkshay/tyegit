@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.1] - Auth Hotfix
+### Fixed
+- Fixed an issue where GitHub Device Flow authentication would fail on compiled `.msi` builds due to missing Client ID environment variables in CI.
+
 ## [2.2.0] - The Auto-Updater & God-Mode Graph
 ### Added
 - **Secure Auto-Updater:** TyeGit now natively supports downloading and installing updates without leaving the app. You can manually check for updates via the new Settings panel.

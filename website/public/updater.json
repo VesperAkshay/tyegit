@@ -1,11 +1,11 @@
 {
-  "version": "v2.2.0",
-  "notes": "Implemented secure auto-updater and God-Mode visual commit graph.",
-  "pub_date": "2026-06-13T19:00:00Z",
+  "version": "v2.2.1",
+  "notes": "Hotfix: Fixed an issue where GitHub authentication would crash in production builds.",
+  "pub_date": "2026-06-13T19:30:00Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "SIGNATURE_PLACEHOLDER",
-      "url": "https://github.com/VesperAkshay/tyegit/releases/download/v2.2.0/tyegit_2.2.0_x64_en-US.msi.zip"
+      "url": "https://github.com/VesperAkshay/tyegit/releases/download/v2.2.1/tyegit_2.2.1_x64_en-US.msi.zip"
     }
   }
 }

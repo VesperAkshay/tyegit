@@ -1,6 +1,6 @@
 import * as React from "react";
 import Link from "next/link";
-import { GitBranch, GitMerge, Search, Layers, ShieldCheck, Zap } from "lucide-react";
+import { GitBranch, GitMerge, Search, Layers, ShieldCheck, Zap, ArrowRight } from "lucide-react";
 import { StagingAnimation } from "@/components/animations/StagingAnimation";
 import { MergeAnimation } from "@/components/animations/MergeAnimation";
 import { StashAnimation } from "@/components/animations/StashAnimation";
@@ -12,7 +12,7 @@ export default function Home() {
       {/* ----------------- LAYER 1: MARKETING HERO ----------------- */}
       <section className="flex flex-col items-center text-center space-y-8 mt-12">
         <div className="bg-charcoal text-cream font-mono text-xs px-3 py-1 rounded-full border border-warm-gray mb-4">
-          TyeGit v2.2.0 is now available
+          TyeGit v2.2.1 is now available
         </div>
         
         <h1 className="hero-wordmark text-6xl md:text-8xl font-black tracking-tighter text-charcoal">
@@ -30,8 +30,9 @@ export default function Home() {
           <Link href="/docs/getting-started" className="bg-surface text-charcoal rounded-md px-6 py-3 font-bold border border-warm-gray hover:bg-warm-gray/30 transition-colors">
             View Docs
           </Link>
-          <a href="https://github.com/VesperAkshay/tyegit" className="bg-charcoal text-cream rounded-md px-6 py-3 font-bold hover:bg-charcoal/90 transition-colors">
-            GitHub
+          <a href="https://github.com/VesperAkshay/tyegit/releases/latest" className="mb-8 inline-flex items-center rounded-full border border-zinc-200 bg-white/50 px-3 py-1 text-sm font-medium text-zinc-900 shadow-sm backdrop-blur-sm transition-colors hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:hover:bg-zinc-900">
+            TyeGit v2.2.1 is now available
+            <ArrowRight className="ml-2 h-4 w-4" />
           </a>
         </div>
       </section>

@@ -5,7 +5,7 @@
   <p><strong>The Git client that stays out of your way. Fast. Precise. Built in Rust.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/version-v2.2.0-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
+    <img src="https://img.shields.io/badge/version-v2.2.1-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
     <img src="https://img.shields.io/badge/Rust-Native-orange.svg?style=for-the-badge&logo=rust&color=B12A2A" alt="Rust Native" />
     <img src="https://img.shields.io/badge/Tauri-Backend-yellow.svg?style=for-the-badge&logo=tauri&color=2B2A29" alt="Tauri Backend" />
     <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge&color=2B2A29" alt="License" />
