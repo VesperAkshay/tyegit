@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next';
 import { source } from '@/app/source';
 
+export const dynamic = 'force-static';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = 'https://akshaypatel.me/tyegit';
 
