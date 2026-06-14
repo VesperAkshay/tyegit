@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.4] - Security Patch & Key Rotation
+### Fixed
+- **SECURITY:** Rotated the Tauri auto-updater private key because the previous key was accidentally committed to the repository. 
+- Deleted the compromised keys from the repository and added them to `.gitignore`.
+
 ## [2.2.3] - Updater Key Fix
 ### Fixed
 - Fixed an issue where the `pubkey` in `tauri.conf.json` was improperly formatted, causing the GitHub Actions build to fail during signature generation.

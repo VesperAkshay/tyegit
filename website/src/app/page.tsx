@@ -12,7 +12,7 @@ export default function Home() {
       {/* ----------------- LAYER 1: MARKETING HERO ----------------- */}
       <section className="flex flex-col items-center text-center space-y-8 mt-12">
         <div className="bg-charcoal text-cream font-mono text-xs px-3 py-1 rounded-full border border-warm-gray mb-4">
-          TyeGit v2.2.3 is now available
+          TyeGit v2.2.4 is now available
         </div>
         
         <h1 className="hero-wordmark text-6xl md:text-8xl font-black tracking-tighter text-charcoal">
@@ -30,9 +30,15 @@ export default function Home() {
           <Link href="/docs/getting-started" className="bg-surface text-charcoal rounded-md px-6 py-3 font-bold border border-warm-gray hover:bg-warm-gray/30 transition-colors">
             View Docs
           </Link>
-          <a href="https://github.com/VesperAkshay/tyegit/releases/latest" className="mb-8 inline-flex items-center rounded-full border border-zinc-200 bg-white/50 px-3 py-1 text-sm font-medium text-zinc-900 shadow-sm backdrop-blur-sm transition-colors hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:hover:bg-zinc-900">
-            TyeGit v2.2.3 is now available
+          <a href="https://github.com/VesperAkshay/tyegit/releases/latest" className="inline-flex items-center rounded-full border border-zinc-200 bg-white/50 px-3 py-1 text-sm font-medium text-zinc-900 shadow-sm backdrop-blur-sm transition-colors hover:bg-white dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-100 dark:hover:bg-zinc-900 self-center">
+            TyeGit v2.2.4 is now available
             <ArrowRight className="ml-2 h-4 w-4" />
+          </a>
+        </div>
+
+        <div className="pt-6 pb-8">
+          <a href="https://www.producthunt.com/products/tyegit?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-tyegit" target="_blank" rel="noopener noreferrer">
+            <img alt="TyeGit - A lightning-fast, beautifully native Git client. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1170806&amp;theme=light&amp;t=1781455704998" />
           </a>
         </div>
       </section>

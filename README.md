@@ -5,10 +5,16 @@
   <p><strong>The Git client that stays out of your way. Fast. Precise. Built in Rust.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/version-v2.2.3-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
+    <img src="https://img.shields.io/badge/version-v2.2.4-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
     <img src="https://img.shields.io/badge/Rust-Native-orange.svg?style=for-the-badge&logo=rust&color=B12A2A" alt="Rust Native" />
     <img src="https://img.shields.io/badge/Tauri-Backend-yellow.svg?style=for-the-badge&logo=tauri&color=2B2A29" alt="Tauri Backend" />
     <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge&color=2B2A29" alt="License" />
+  </p>
+
+  <p>
+    <a href="https://www.producthunt.com/products/tyegit?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-tyegit" target="_blank" rel="noopener noreferrer">
+      <img alt="TyeGit - A lightning-fast, beautifully native Git client. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1170806&amp;theme=light&amp;t=1781455704998" />
+    </a>
   </p>
   
   <p>
@@ -19,6 +25,8 @@
     <a href="https://github.com/VesperAkshay/tyegit/issues">Request Feature</a>
   </p>
 </div>
+
+> ⚠️ **SECURITY ADVISORY:** Versions `v2.2.3` and below had a compromised auto-updater key accidentally leaked. **DO NOT** install or use them. Please only download and install `v2.2.4` or newer.
 
 ---
 

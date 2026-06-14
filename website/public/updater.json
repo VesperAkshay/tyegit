@@ -1,11 +1,11 @@
 {
-  "version": "v2.2.3",
-  "notes": "Hotfix: Fixed an issue where the updater public key caused build errors.",
-  "pub_date": "2026-06-13T20:15:00Z",
+  "version": "v2.2.4",
+  "notes": "SECURITY PATCH: Rotated the auto-updater private key due to an accidental leak in a previous commit. Previous versions are insecure and should not be used.",
+  "pub_date": "2026-06-14T17:00:00Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "SIGNATURE_PLACEHOLDER",
-      "url": "https://github.com/VesperAkshay/tyegit/releases/download/v2.2.3/TyeGit_2.2.3_x64_en-US.msi.zip"
+      "url": "https://github.com/VesperAkshay/tyegit/releases/download/v2.2.4/TyeGit_2.2.4_x64_en-US.msi.zip"
     }
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "tyegit"
-version = "2.2.3"
+version = "2.2.4"
 description = "A fast, tactile Git client built in Rust."
 authors = ["you"]
 edition = "2021"
