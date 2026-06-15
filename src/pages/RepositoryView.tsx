@@ -526,7 +526,11 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
         <AuthModal 
           pendingAction={pendingAction} pat={pat} setPat={setPat} 
           syncing={syncing} onCancel={() => setShowAuthModal(false)} 
-          onAuthenticate={executeNetworkAction} 
+          onAuthenticate={(action, token) => {
+            if (action !== "login") {
+              executeNetworkAction(action, token);
+            }
+          }} 
         />
       )}
 

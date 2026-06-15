@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCw, FileCode2, History, Save } from "lucide-react";
-import { DiffEditor, useMonaco } from "@monaco-editor/react";
+import { DiffEditor } from "@monaco-editor/react";
 
 import { CommitDetails } from "../../types";
 
@@ -48,7 +48,6 @@ export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoad
 
   const diffEditorRef = useRef<any>(null);
   const decorationsCollectionRef = useRef<any>(null);
-  const monaco = useMonaco();
 
   const updateDecorations = (editor: any, monacoInstance: any) => {
     const changes = editor.getLineChanges();

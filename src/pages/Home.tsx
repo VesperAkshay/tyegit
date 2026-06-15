@@ -259,7 +259,7 @@ export default function Home({ onOpenRepo, pat, setPat }: HomeProps) {
             setPat={setPat} 
             syncing={false} 
             onCancel={() => setShowAuthModal(false)} 
-            onAuthenticate={(action, token) => {
+            onAuthenticate={(_action, token) => {
               setShowAuthModal(false);
               setPat(token);
             }} 
