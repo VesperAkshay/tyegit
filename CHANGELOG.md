@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - The GitHub Actions Update
+### Added
+- **GitHub Actions Management:** You can now fully manage your repository and environment Secrets, Variables, and Environments natively within TyeGit. Secrets are securely encrypted locally via `libsodium` before being pushed to GitHub.
+- **Revert Hunk:** Added a new red `↺` arrow to the inline diff editor. You can now surgically slice pristine lines out of the Git Index and replace your working directory modifications, allowing you to discard unwanted changes hunk-by-hunk.
+- **Global GitHub Login:** Added a proactive "LOGIN WITH GITHUB" button directly to the Home screen. You can now authenticate via Device Flow and instantly 1-click clone directly from the cloud without needing to open a local repository first.
+
 ## [2.2.4] - Security Patch & Key Rotation
 ### Fixed
 - **SECURITY:** Rotated the Tauri auto-updater private key because the previous key was accidentally committed to the repository. 
