@@ -6,6 +6,9 @@
     "staging",
     "branches",
     "merge",
-    "networking"
+    "visual-rebase",
+    "cherry-picking",
+    "networking",
+    "github"
   ]
 }

@@ -27,9 +27,27 @@ pub struct CommitInfo {
     pub timestamp: i64,
     pub parents: Vec<String>,
     pub refs: Vec<RefInfo>,
+    pub graph_row: Option<crate::git::graph::GraphRow>,
 }
 
-pub fn get_history(repo: &Repository, limit: usize, skip: usize, search_query: Option<String>) -> Result<Vec<CommitInfo>, git2::Error> {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HistoryResult {
+    pub commits: Vec<CommitInfo>,
+    pub active_lanes: Vec<crate::git::graph::LaneInfo>,
+    pub next_color_idx: usize,
+    pub max_columns: usize,
+}
+
+pub fn get_history(
+    repo: &Repository, 
+    limit: usize, 
+    skip: usize, 
+    search_query: Option<String>,
+    active_lanes: Option<Vec<crate::git::graph::LaneInfo>>,
+    next_color_idx: Option<usize>,
+    row_height: f64,
+    column_width: f64
+) -> Result<HistoryResult, git2::Error> {
     let mut revwalk = repo.revwalk()?;
     
     // Sort by time and topology (important for graph rendering)
@@ -117,9 +135,28 @@ pub fn get_history(repo: &Repository, limit: usize, skip: usize, search_query: O
                 timestamp: commit.time().seconds(),
                 parents: commit.parent_ids().map(|id| id.to_string()).collect(),
                 refs: commit_refs.get(&commit.id().to_string()).cloned().unwrap_or_default(),
+                graph_row: None,
             });
         }
-        return Ok(commits);
+
+        let (graph_rows, active_lanes_out, next_color_idx_out, max_columns) = crate::git::graph::compute_graph_rows(
+            &commits,
+            active_lanes.unwrap_or_default(),
+            next_color_idx.unwrap_or(0),
+            row_height,
+            column_width
+        );
+
+        for (i, row) in graph_rows.into_iter().enumerate() {
+            commits[i].graph_row = Some(row);
+        }
+
+        return Ok(HistoryResult {
+            commits,
+            active_lanes: active_lanes_out,
+            next_color_idx: next_color_idx_out,
+            max_columns,
+        });
     } else {
         let mut commits = Vec::new();
         for oid_result in revwalk.skip(skip) {
@@ -137,10 +174,29 @@ pub fn get_history(repo: &Repository, limit: usize, skip: usize, search_query: O
                         timestamp: commit.time().seconds(),
                         parents: commit.parent_ids().map(|id| id.to_string()).collect(),
                         refs: commit_refs.get(&commit.id().to_string()).cloned().unwrap_or_default(),
+                        graph_row: None,
                     });
                 }
             }
         }
-        return Ok(commits);
+        
+        let (graph_rows, active_lanes_out, next_color_idx_out, max_columns) = crate::git::graph::compute_graph_rows(
+            &commits,
+            active_lanes.unwrap_or_default(),
+            next_color_idx.unwrap_or(0),
+            row_height,
+            column_width
+        );
+
+        for (i, row) in graph_rows.into_iter().enumerate() {
+            commits[i].graph_row = Some(row);
+        }
+
+        return Ok(HistoryResult {
+            commits,
+            active_lanes: active_lanes_out,
+            next_color_idx: next_color_idx_out,
+            max_columns,
+        });
     }
 }

@@ -11,3 +11,5 @@ pub mod stash;
 pub mod state;
 pub mod merge;
 pub mod auth;
+pub mod graph;
+pub mod rebase;

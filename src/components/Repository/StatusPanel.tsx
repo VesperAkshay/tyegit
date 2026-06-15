@@ -1,4 +1,4 @@
-import { Plus, Minus, ArchiveRestore, Trash2, DownloadCloud, AlertTriangle } from "lucide-react";
+import { Plus, Minus, ArchiveRestore, Trash2, DownloadCloud, AlertTriangle, Undo2, CheckCircle } from "lucide-react";
 import { FileStatus, StashInfo, RepositoryState, MergeStatus } from "../../types";
 
 interface StatusPanelProps {
@@ -21,6 +21,7 @@ interface StatusPanelProps {
   setIsAmending: (amending: boolean) => void;
   headCommitMessage: string;
   onCommit: () => void;
+  onUndoCommit: () => void;
   committing: boolean;
   onStash: () => void;
   onStashApply: (index: number) => void;
@@ -55,7 +56,7 @@ const StatusBadge = ({ file }: { file: FileStatus }) => {
 export default function StatusPanel({
   stagedFiles, unstagedFiles, stashes, repoState, mergeStatus, selectedFile, onSelectFile,
   onStage, onUnstage, onStageAll, onUnstageAll, onDiscard, onIgnore,
-  commitMessage, setCommitMessage, isAmending, setIsAmending, headCommitMessage, onCommit, committing,
+  commitMessage, setCommitMessage, isAmending, setIsAmending, headCommitMessage, onCommit, onUndoCommit, committing,
   onStash, onStashApply, onStashPop, onStashDrop, onAbortMerge
 }: StatusPanelProps) {
   return (
@@ -81,67 +82,77 @@ export default function StatusPanel({
         </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="bg-canvas border border-b-0 border-chrome-indigo px-2 py-1 flex items-center justify-between bg-canvas-soft">
-          <span className="ui-label text-ink">STAGED CHANGES ({stagedFiles.length})</span>
-          {stagedFiles.length > 0 && (
-            <button onClick={onUnstageAll} className="text-[10px] font-bold text-ink-soft hover:text-ink">UNSTAGE ALL</button>
-          )}
+      {stagedFiles.length === 0 && unstagedFiles.length === 0 && repoState !== "Merge" ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-ink-soft min-h-0 bg-platinum beveled-plate border-2 border-chrome-indigo m-2">
+          <CheckCircle className="w-12 h-12 mb-4 text-systems-green opacity-80" />
+          <div className="font-bold text-ink text-lg text-center">Working tree is clean</div>
+          <div className="text-xs text-center mt-2 max-w-[220px]">No local changes to save. You're all caught up!</div>
         </div>
-        <div className="beveled-plate flex-1 overflow-auto bg-platinum p-1">
-          {stagedFiles.map(file => (
-            <div 
-              key={`staged-${file.file_path}`}
-              onClick={() => onSelectFile({ path: file.file_path, isStaged: true })}
-              className={`flex items-center justify-between p-1.5 text-xs border cursor-pointer mb-1 ${selectedFile?.path === file.file_path && selectedFile?.isStaged ? 'bg-canvas border-chrome-indigo text-ink font-bold shadow-[2px_2px_0px_rgba(61,79,151,0.2)]' : 'bg-transparent border-transparent text-ink-soft hover:bg-canvas/50'}`}
-            >
-              <div className="flex items-center gap-2 overflow-hidden">
-                <StatusBadge file={file} />
-                <span className="truncate">{file.file_path}</span>
-              </div>
-              <button onClick={(e) => onUnstage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-2">
-                <Minus className="w-3 h-3" />
-              </button>
+      ) : (
+        <>
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="bg-canvas border border-b-0 border-chrome-indigo px-2 py-1 flex items-center justify-between bg-canvas-soft">
+              <span className="ui-label text-ink">STAGED CHANGES ({stagedFiles.length})</span>
+              {stagedFiles.length > 0 && (
+                <button onClick={onUnstageAll} className="text-[10px] font-bold text-ink-soft hover:text-ink">UNSTAGE ALL</button>
+              )}
             </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="bg-canvas border border-b-0 border-chrome-indigo px-2 py-1 flex items-center justify-between bg-canvas-soft">
-          <span className="ui-label text-ink">UNSTAGED CHANGES ({unstagedFiles.length})</span>
-          {unstagedFiles.length > 0 && (
-            <button onClick={onStageAll} className="text-[10px] font-bold text-ink-soft hover:text-ink">STAGE ALL</button>
-          )}
-        </div>
-        <div className="beveled-plate flex-1 overflow-auto bg-platinum p-1">
-          {unstagedFiles.map(file => (
-            <div 
-              key={`unstaged-${file.file_path}`}
-              onClick={() => onSelectFile({ path: file.file_path, isStaged: false })}
-              className={`flex items-center justify-between p-1.5 text-xs border cursor-pointer mb-1 ${selectedFile?.path === file.file_path && !selectedFile?.isStaged ? 'bg-canvas border-chrome-indigo text-ink font-bold shadow-[2px_2px_0px_rgba(61,79,151,0.2)]' : 'bg-transparent border-transparent text-ink-soft hover:bg-canvas/50'}`}
-            >
-              <div className="flex items-center gap-2 overflow-hidden">
-                <StatusBadge file={file} />
-                <span className="truncate">{file.file_path}</span>
-              </div>
-              <div className="flex items-center shrink-0">
-                {(file.status.includes("Untracked")) && (
-                  <button onClick={(e) => onIgnore(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-nav-gold hover:bg-nav-gold/10 p-0.5 rounded ml-1" title="Add to .gitignore">
-                    <ArchiveRestore className="w-3 h-3" />
+            <div className="beveled-plate flex-1 overflow-auto bg-platinum p-1">
+              {stagedFiles.map(file => (
+                <div 
+                  key={`staged-${file.file_path}`}
+                  onClick={() => onSelectFile({ path: file.file_path, isStaged: true })}
+                  className={`flex items-center justify-between p-1.5 text-xs border cursor-pointer mb-1 ${selectedFile?.path === file.file_path && selectedFile?.isStaged ? 'bg-canvas border-chrome-indigo text-ink font-bold shadow-[2px_2px_0px_rgba(61,79,151,0.2)]' : 'bg-transparent border-transparent text-ink-soft hover:bg-canvas/50'}`}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <StatusBadge file={file} />
+                    <span className="truncate">{file.file_path}</span>
+                  </div>
+                  <button onClick={(e) => onUnstage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-2">
+                    <Minus className="w-3 h-3" />
                   </button>
-                )}
-                <button onClick={(e) => onDiscard(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-1" title="Discard Changes">
-                  <Trash2 className="w-3 h-3" />
-                </button>
-                <button onClick={(e) => onStage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-systems-teal hover:bg-systems-teal/10 p-0.5 rounded ml-1" title="Stage File">
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="bg-canvas border border-b-0 border-chrome-indigo px-2 py-1 flex items-center justify-between bg-canvas-soft">
+              <span className="ui-label text-ink">UNSTAGED CHANGES ({unstagedFiles.length})</span>
+              {unstagedFiles.length > 0 && (
+                <button onClick={onStageAll} className="text-[10px] font-bold text-ink-soft hover:text-ink">STAGE ALL</button>
+              )}
+            </div>
+            <div className="beveled-plate flex-1 overflow-auto bg-platinum p-1">
+              {unstagedFiles.map(file => (
+                <div 
+                  key={`unstaged-${file.file_path}`}
+                  onClick={() => onSelectFile({ path: file.file_path, isStaged: false })}
+                  className={`flex items-center justify-between p-1.5 text-xs border cursor-pointer mb-1 ${selectedFile?.path === file.file_path && !selectedFile?.isStaged ? 'bg-canvas border-chrome-indigo text-ink font-bold shadow-[2px_2px_0px_rgba(61,79,151,0.2)]' : 'bg-transparent border-transparent text-ink-soft hover:bg-canvas/50'}`}
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <StatusBadge file={file} />
+                    <span className="truncate">{file.file_path}</span>
+                  </div>
+                  <div className="flex items-center shrink-0">
+                    {(file.status.includes("Untracked")) && (
+                      <button onClick={(e) => onIgnore(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-nav-gold hover:bg-nav-gold/10 p-0.5 rounded ml-1" title="Add to .gitignore">
+                        <ArchiveRestore className="w-3 h-3" />
+                      </button>
+                    )}
+                    <button onClick={(e) => onDiscard(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-1" title="Discard Changes">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                    <button onClick={(e) => onStage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-systems-teal hover:bg-systems-teal/10 p-0.5 rounded ml-1" title="Stage File">
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {stashes.length > 0 && (
         <div className="max-h-[30%] flex flex-col min-h-0 shrink-0">
@@ -178,6 +189,14 @@ export default function StatusPanel({
           className="w-full text-xs p-2 bg-white border border-chrome-indigo focus:outline-none focus:border-nav-gold resize-none h-16 mb-2 text-ink"
           value={commitMessage}
           onChange={e => setCommitMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+              e.preventDefault();
+              if (commitMessage.trim() && stagedFiles.length > 0 && !committing) {
+                onCommit();
+              }
+            }
+          }}
         />
         <div className="flex items-center gap-2 mb-2 px-1">
           <input 
@@ -198,6 +217,13 @@ export default function StatusPanel({
           </label>
         </div>
         <div className="flex gap-2">
+          <button 
+            onClick={onUndoCommit}
+            title="Undo Last Commit (Soft Reset)"
+            className="bg-surface border border-chrome-indigo text-ink px-2 py-1.5 text-xs hover:bg-canvas transition-colors flex items-center justify-center shrink-0"
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+          </button>
           <button 
             onClick={onStash}
             disabled={unstagedFiles.length === 0 && stagedFiles.length === 0}

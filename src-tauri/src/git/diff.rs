@@ -1,5 +1,4 @@
 use git2::{DiffFormat, DiffOptions, Repository};
-use std::path::Path;
 use serde::{Deserialize, Serialize};
 use crate::git::history::CommitInfo;
 
@@ -68,6 +67,7 @@ pub fn get_commit_details(repo: &Repository, commit_id: &str) -> Result<CommitDe
         timestamp: commit.time().seconds(),
         parents,
         refs: Vec::new(),
+        graph_row: None,
     };
 
     let mut files_changed = Vec::new();

@@ -55,12 +55,25 @@ pub fn add_to_gitignore(repo: &Repository, path: &str) -> Result<(), git2::Error
     let repo_path = repo.workdir().ok_or_else(|| git2::Error::from_str("Bare repo"))?;
     let gitignore_path = repo_path.join(".gitignore");
     
+    let mut needs_newline = false;
+    if gitignore_path.exists() {
+        if let Ok(contents) = std::fs::read_to_string(&gitignore_path) {
+            if !contents.is_empty() && !contents.ends_with('\n') {
+                needs_newline = true;
+            }
+        }
+    }
+    
     use std::io::Write;
     let mut file = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(gitignore_path)
+        .open(&gitignore_path)
         .map_err(|e| git2::Error::from_str(&format!("Failed to open .gitignore: {}", e)))?;
+        
+    if needs_newline {
+        writeln!(file).map_err(|e| git2::Error::from_str(&format!("Failed to write newline: {}", e)))?;
+    }
         
     writeln!(file, "{}", path)
         .map_err(|e| git2::Error::from_str(&format!("Failed to write to .gitignore: {}", e)))?;

@@ -1,0 +1,28 @@
+---
+title: Visual Rebase
+description: Drag-and-drop your commit history.
+---
+
+# Visual Rebase™
+
+Git rebase is traditionally one of the most feared commands in the terminal. **Visual Rebase** changes that completely.
+
+With Visual Rebase, you can safely reorder your commit history using a simple drag-and-drop interface. TyeGit performs a dry-run in memory to ensure your changes are safe *before* you apply them.
+
+## Using Visual Rebase
+
+1. Open the **History Panel** in TyeGit.
+2. Click the **VISUAL REBASE** button at the top of the commit list.
+3. A modal will appear showing your recent commits as draggable cards.
+4. **Drag and drop** to reorder the commits.
+5. Watch the preview section at the bottom. TyeGit will instantly dry-run the rebase and warn you if there are conflicts.
+6. Once the preview says "No conflicts detected", click **APPLY REBASE**.
+
+## Safe by Design
+
+Visual Rebase is built with extreme safety guarantees:
+- **Zero File Manipulation**: The preview engine simulates the cherry-picks purely in memory. Your working directory is never touched during the drag-and-drop phase.
+- **Atomic Operations**: Only when you click Apply and validation passes does TyeGit replay the history.
+
+## Coming Soon
+In future updates, Visual Rebase will support **Squashing**, **Rewording**, and **Dropping** commits directly from the same canvas!

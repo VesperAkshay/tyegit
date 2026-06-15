@@ -91,3 +91,39 @@ pub fn get_file_content(path: String, file_path: String, treeish: String) -> Res
         Err(e) => Err(format!("Failed to open repository: {}", e.message())),
     }
 }
+
+#[tauri::command]
+pub fn get_global_git_config() -> Result<(String, String), String> {
+    match git2::Config::open_default() {
+        Ok(config) => {
+            let name = config.get_string("user.name").unwrap_or_default();
+            let email = config.get_string("user.email").unwrap_or_default();
+            Ok((name, email))
+        },
+        Err(_) => Ok(("".to_string(), "".to_string())),
+    }
+}
+
+#[tauri::command]
+pub fn set_global_git_config(name: String, email: String) -> Result<(), String> {
+    match git2::Config::open_default() {
+        Ok(mut config) => {
+            config.set_str("user.name", &name).map_err(|e| format!("Failed to set name: {}", e.message()))?;
+            config.set_str("user.email", &email).map_err(|e| format!("Failed to set email: {}", e.message()))?;
+            Ok(())
+        },
+        Err(e) => {
+            // Try to create/open global config explicitly if default fails
+            if let Ok(global_path) = git2::Config::find_global() {
+                if let Ok(mut config) = git2::Config::new() {
+                    if config.add_file(&global_path, git2::ConfigLevel::Global, true).is_ok() {
+                        config.set_str("user.name", &name).map_err(|e| e.message().to_string())?;
+                        config.set_str("user.email", &email).map_err(|e| e.message().to_string())?;
+                        return Ok(());
+                    }
+                }
+            }
+            Err(format!("Failed to open git config: {}", e.message()))
+        }
+    }
+}

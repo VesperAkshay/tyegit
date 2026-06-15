@@ -4,11 +4,13 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://akshaypatel.me"),
   title: {
     template: "%s | TyeGit",
-    default: "TyeGit",
+    default: "TyeGit - Blazing Fast Native Git Client",
   },
-  description: "A modern, fast, Git client built with Rust and Tauri.",
+  description: "A modern, fast, Git client built with Rust and Tauri. Featuring a surgical diff editor, multi-remote mastery, and zero Electron overhead.",
+  keywords: ["git", "git client", "tauri", "rust", "github", "developer tools"],
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-import { ArrowLeft, GitBranch, Download, Upload, RefreshCw, Tag, GitMerge, Globe, Settings } from "lucide-react";
+import { ArrowLeft, GitBranch, Download, Upload, RefreshCw, Tag, GitMerge, Globe } from "lucide-react";
 import { BranchInfo, TagInfo, RemoteInfo } from "../../types";
 
 interface RepositoryHeaderProps {

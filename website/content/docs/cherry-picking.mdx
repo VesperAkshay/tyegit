@@ -1,0 +1,33 @@
+---
+title: Cherry-Picking
+description: Surgical commit transfer across branches.
+---
+
+import { CherryPickAnimation } from "@/components/animations/CherryPickAnimation";
+
+# Surgical Cherry Picking
+
+Need a bugfix from the main branch but not ready to merge everything? Cherry-picking allows you to select any commit from the history graph and instantly replay it onto your working branch with a single click.
+
+<div className="w-full aspect-video rounded-xl overflow-hidden my-8 border border-warm-gray shadow-lg relative bg-charcoal">
+  <CherryPickAnimation />
+</div>
+
+## How to Cherry-Pick
+
+1. Open the **History Panel** in TyeGit.
+2. Ensure you are currently checked out on the branch you want to apply the commit *to* (your working branch).
+3. Switch your view to the branch that contains the commit you want (e.g., `main`).
+4. Click on the commit you want to cherry-pick.
+5. In the Diff Viewer on the right, click the **CHERRY PICK** button next to the commit ID.
+6. TyeGit will instantly apply the changes from that commit onto your current working branch.
+
+<Callout type="info">
+Cherry-picking in TyeGit is incredibly fast because it bypasses standard working directory manipulation and uses libgit2 to apply the patch directly.
+</Callout>
+
+## Handling Conflicts
+
+If the commit you are trying to cherry-pick conflicts with the state of your working branch, TyeGit will pause the operation and open the standard Conflict Resolution window.
+
+Once you resolve the conflicts, the cherry-pick will complete and the new commit will be created.

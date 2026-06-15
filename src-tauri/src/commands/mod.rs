@@ -7,4 +7,5 @@ pub mod sync;
 pub mod tag;
 pub mod stash;
 pub mod merge;
+pub mod rebase;
 pub mod auth;

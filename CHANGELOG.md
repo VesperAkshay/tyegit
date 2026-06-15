@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - The Visual Rebase & Cherry Picking Update
+### Added
+- **Visual Rebase:** You can now safely reorder your commit history using a simple drag-and-drop interface. TyeGit performs a dry-run in memory to ensure your changes are safe before applying.
+- **Surgical Cherry Picking:** Instantly replay specific commits onto your working branch from anywhere in the repository history graph with a single click.
+- **Interactive Website Workflows:** Replaced static marketing on the website with scroll-triggered, springing Framer Motion layout animations that demonstrate TyeGit workflows.
+- **Documentation:** Added a dedicated Cherry-picking documentation page.
+
+## [2.3.0] - The GitHub Actions Update
+### Added
+- **GitHub Actions Management:** You can now fully manage your repository and environment Secrets, Variables, and Environments natively within TyeGit. Secrets are securely encrypted locally via `libsodium` before being pushed to GitHub.
+- **Revert Hunk:** Added a new red `↺` arrow to the inline diff editor. You can now surgically slice pristine lines out of the Git Index and replace your working directory modifications, allowing you to discard unwanted changes hunk-by-hunk.
+- **Global GitHub Login:** Added a proactive "LOGIN WITH GITHUB" button directly to the Home screen. You can now authenticate via Device Flow and instantly 1-click clone directly from the cloud without needing to open a local repository first.
+
+## [2.2.4] - Security Patch & Key Rotation
+### Fixed
+- **SECURITY:** Rotated the Tauri auto-updater private key because the previous key was accidentally committed to the repository. 
+- Deleted the compromised keys from the repository and added them to `.gitignore`.
+
+## [2.2.3] - Updater Key Fix
+### Fixed
+- Fixed an issue where the `pubkey` in `tauri.conf.json` was improperly formatted, causing the GitHub Actions build to fail during signature generation.
+
+## [2.2.2] - Updater Fix
+### Fixed
+- Fixed Tauri v2 configuration missing `createUpdaterArtifacts`, causing GitHub Actions to not upload `.zip` update bundles.
+
+## [2.2.1] - Auth Hotfix
+### Fixed
+- Fixed an issue where GitHub Device Flow authentication would fail on compiled `.msi` builds due to missing Client ID environment variables in CI.
+
+## [2.2.0] - The Auto-Updater & God-Mode Graph
+### Added
+- **Secure Auto-Updater:** TyeGit now natively supports downloading and installing updates without leaving the app. You can manually check for updates via the new Settings panel.
+- **God-Mode Visual Commit Graph:** A custom, Rust-powered topological merge graph that streams Beziers at 60fps for infinitely scrollable commit history.
+- **Resizable Sidebars:** You can now drag the vertical layout handle to optimize the History and Diff viewer panels.
+
+## [2.1.0] - Skipped (Merged into 2.2.0)
+
+
 ## [2.0.0] - The Rebranding & Documentation Update
 ### Added
 - **Major Rebranding:** Renamed the application from "Git Desktop" to "TyeGit".

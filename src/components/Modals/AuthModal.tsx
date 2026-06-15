@@ -4,12 +4,12 @@ import { Key, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 interface AuthModalProps {
-  pendingAction: "push" | "pull" | "fetch" | null;
+  pendingAction: "push" | "pull" | "fetch" | "login" | null;
   pat: string;
   setPat: (pat: string) => void;
   syncing: boolean;
   onCancel: () => void;
-  onAuthenticate: (action: "push" | "pull" | "fetch", token: string) => void;
+  onAuthenticate: (action: "push" | "pull" | "fetch" | "login", token: string) => void;
 }
 
 interface DeviceCodeResponse {
@@ -26,7 +26,7 @@ interface AccessTokenResponse {
   error_description?: string;
 }
 
-const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+const CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "Ov23liFORPl2NxxUaOAl";
 
 export default function AuthModal({ pendingAction, setPat, syncing, onCancel, onAuthenticate }: AuthModalProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceCodeResponse | null>(null);

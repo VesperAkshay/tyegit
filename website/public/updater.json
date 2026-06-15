@@ -1,0 +1,11 @@
+{
+  "version": "v2.4.0",
+  "notes": "The Visual Rebase & Cherry Picking Update",
+  "pub_date": "2026-06-15T12:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "REPLACE_WITH_SIGNATURE",
+      "url": "https://github.com/VesperAkshay/tyegit/releases/download/v2.4.0/TyeGit_2.4.0_x64_en-US.msi.zip"
+    }
+  }
+}

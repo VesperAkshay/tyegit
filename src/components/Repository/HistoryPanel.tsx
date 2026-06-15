@@ -1,11 +1,13 @@
 import { Search, Cloud, Target, Tag, CircleDot, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { CommitInfo, RefInfo } from "../../types";
 import CommitGraph from "./CommitGraph";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 interface HistoryPanelProps {
   commits: CommitInfo[];
+  maxColumns: number;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCommitId?: string | null;
@@ -15,6 +17,7 @@ interface HistoryPanelProps {
   avatarsMap?: Record<string, string>;
   ownerRepo?: { owner: string; repo: string } | null;
   pat?: string | null;
+  onVisualRebaseClick?: () => void;
 }
 
 function renderRefBadge(ref: RefInfo) {
@@ -53,19 +56,35 @@ function renderRefBadge(ref: RefInfo) {
 }
 
 export default function HistoryPanel({ 
-  commits, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore,
-  avatarsMap = {}, ownerRepo, pat
+  commits, maxColumns, searchQuery, setSearchQuery, selectedCommitId, onSelectCommit, onLoadMore, hasMore,
+  avatarsMap = {}, ownerRepo, pat, onVisualRebaseClick
 }: HistoryPanelProps) {
-  // We need a fixed row height so the SVG graph lines up exactly with the HTML list items
-  const ROW_HEIGHT = 48; // 48px matches our styling below
-
+  const ROW_HEIGHT = 48;
+  const COLUMN_WIDTH = 14;
+  
+  const parentRef = useRef<HTMLDivElement>(null);
   const [statusesMap, setStatusesMap] = useState<Record<string, string>>({});
+
+  const rowVirtualizer = useVirtualizer({
+    count: hasMore ? commits.length + 1 : commits.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 20,
+  });
+
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    const [lastItem] = [...virtualItems].reverse();
+    if (!lastItem) return;
+    if (lastItem.index >= commits.length - 1 && hasMore && onLoadMore) {
+      onLoadMore();
+    }
+  }, [virtualItems, commits.length, hasMore, onLoadMore]);
 
   useEffect(() => {
     async function fetchStatuses() {
       if (!ownerRepo || !pat || commits.length === 0) return;
-      
-      // Fetch status for the top 5 visible commits to save API calls
       const topCommits = commits.slice(0, 10);
       for (const commit of topCommits) {
         if (!statusesMap[commit.id]) {
@@ -78,7 +97,6 @@ export default function HistoryPanel({
              });
              setStatusesMap(prev => ({ ...prev, [commit.id]: res.state }));
           } catch (e) {
-             // Silently fail if status endpoint throws (e.g. no CI/CD configured)
              setStatusesMap(prev => ({ ...prev, [commit.id]: "none" }));
           }
         }
@@ -87,20 +105,22 @@ export default function HistoryPanel({
     fetchStatuses();
   }, [commits, ownerRepo, pat]);
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    if (scrollHeight - scrollTop <= clientHeight * 1.5) {
-      if (hasMore && onLoadMore) {
-        onLoadMore();
-      }
-    }
-  };
+  const graphWidth = Math.max(1, maxColumns) * COLUMN_WIDTH;
 
   return (
     <div className="flex flex-col h-full">
       <div className="bg-canvas border border-b-0 border-chrome-indigo px-2 py-1 flex items-center justify-between bg-canvas-soft gap-2 z-10 shrink-0">
         <span className="ui-label text-ink shrink-0">RECENT COMMITS</span>
-        <div className="flex items-center bg-surface border border-chrome-indigo px-1 flex-1">
+        <div className="flex-1"></div>
+        {onVisualRebaseClick && (
+          <button 
+            onClick={onVisualRebaseClick}
+            className="px-2 py-0.5 text-[9px] font-bold bg-systems-teal text-white border border-carbon shadow-[1px_1px_0px_rgba(33,36,46,1)] active:translate-y-px active:shadow-none whitespace-nowrap"
+          >
+            VISUAL REBASE
+          </button>
+        )}
+        <div className="flex items-center bg-surface border border-chrome-indigo px-1 w-1/3 min-w-[100px]">
           <Search className="w-3 h-3 text-ink-soft mr-1" />
           <input 
             type="text" 
@@ -113,36 +133,76 @@ export default function HistoryPanel({
       </div>
       
       <div 
-        className="beveled-plate flex-1 overflow-auto bg-platinum p-2 relative flex flex-row items-start"
-        onScroll={handleScroll}
+        ref={parentRef}
+        className="beveled-plate flex-1 overflow-auto bg-platinum relative"
       >
         {commits.length === 0 ? (
           <div className="p-4 w-full text-center text-xs font-bold text-ink-soft">No commits found</div>
         ) : (
-          <>
-            {/* The SVG Graph Column */}
-            <div className="shrink-0 pt-[2px]">
-              {/* Only show graph if we are not actively filtering, as filtering breaks adjacency */}
-              {searchQuery === "" && <CommitGraph commits={commits} rowHeight={ROW_HEIGHT} />}
-            </div>
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {searchQuery === "" && (
+              <div 
+                className="absolute top-0 left-0 bottom-0" 
+                style={{ width: graphWidth, paddingLeft: 8, paddingTop: 2 }}
+              >
+                <CommitGraph 
+                  commits={commits} 
+                  virtualItems={virtualItems} 
+                  rowHeight={ROW_HEIGHT} 
+                  columnWidth={COLUMN_WIDTH}
+                  totalWidth={graphWidth}
+                />
+              </div>
+            )}
             
-            {/* The Commits List Column */}
-            <div className="flex-1 min-w-0">
-              {commits.map((commit) => (
-                <div 
-                  key={commit.id} 
+            {virtualItems.map((virtualRow) => {
+              const isLoaderRow = virtualRow.index > commits.length - 1;
+              const commit = commits[virtualRow.index];
+
+              if (isLoaderRow) {
+                return (
+                  <div
+                    key="loader"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: searchQuery === "" ? graphWidth + 8 : 8,
+                      width: `calc(100% - ${searchQuery === "" ? graphWidth + 16 : 16}px)`,
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="flex items-center justify-center"
+                  >
+                    <div className="text-[10px] font-bold text-ink-soft animate-pulse">
+                      LOADING MORE COMMITS...
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={virtualRow.key}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: searchQuery === "" ? graphWidth + 8 : 8,
+                    width: `calc(100% - ${searchQuery === "" ? graphWidth + 16 : 16}px)`,
+                    height: `${virtualRow.size - 4}px`, // Add slight gap
+                    transform: `translateY(${virtualRow.start + 2}px)`,
+                  }}
                   className={`border shadow-sm cursor-pointer transition-colors group flex flex-col justify-center px-2 ${
                     selectedCommitId === commit.id 
                       ? 'bg-chrome-indigo/10 border-chrome-indigo ring-1 ring-chrome-indigo'
                       : 'bg-white border-chrome-indigo hover:border-nav-gold'
                   }`}
                   onClick={() => onSelectCommit && onSelectCommit(commit.id)}
-                  style={{ 
-                    height: `${ROW_HEIGHT - 4}px`, // Subtract 4px for margin/gap
-                    marginTop: '2px',
-                    marginBottom: '2px',
-                    marginLeft: '8px' 
-                  }}
                 >
                   <div className="flex items-center gap-1.5 mb-1 overflow-hidden pr-2">
                     <div className="text-[11px] font-bold text-ink truncate group-hover:text-chrome-indigo shrink">
@@ -176,14 +236,9 @@ export default function HistoryPanel({
                     </div>
                   </div>
                 </div>
-              ))}
-              {hasMore && commits.length >= 50 && (
-                <div className="text-center py-4 text-[10px] font-bold text-ink-soft animate-pulse">
-                  LOADING MORE COMMITS...
-                </div>
-              )}
-            </div>
-          </>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

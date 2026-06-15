@@ -2,13 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { History } from "lucide-react";
 
-import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails, RemoteInfo } from "../types";
+import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails, RemoteInfo, HistoryResult, LaneInfo } from "../types";
 
 import AuthModal from "../components/Modals/AuthModal";
 import BranchModal from "../components/Modals/BranchModal";
 import TagModal from "../components/Modals/TagModal";
 import MergeModal from "../components/Modals/MergeModal";
 import RemoteModal from "../components/Modals/RemoteModal";
+import VisualRebaseModal from "../components/Modals/VisualRebaseModal";
 import RepositoryHeader from "../components/Repository/RepositoryHeader";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
@@ -24,8 +25,14 @@ interface RepositoryViewProps {
 
 export default function RepositoryView({ repoPath, onClose, pat, setPat }: RepositoryViewProps) {
   const [activeTab, setActiveTab] = useState<"status" | "history" | "github">("status");
+  const [leftPaneWidth, setLeftPaneWidth] = useState<number>(320);
+  const [isDraggingPane, setIsDraggingPane] = useState(false);
+  const leftPaneRef = useRef<HTMLDivElement>(null);
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [commits, setCommits] = useState<CommitInfo[]>([]);
+  const [activeLanes, setActiveLanes] = useState<LaneInfo[]>([]);
+  const [nextColorIdx, setNextColorIdx] = useState<number>(0);
+  const [maxColumns, setMaxColumns] = useState<number>(0);
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [tags, setTags] = useState<TagInfo[]>([]);
   const [remotes, setRemotes] = useState<RemoteInfo[]>([]);
@@ -69,6 +76,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   const [tagMessage, setTagMessage] = useState("");
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [showRemoteModal, setShowRemoteModal] = useState(false);
+  const [showVisualRebaseModal, setShowVisualRebaseModal] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,14 +103,46 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingPane || !leftPaneRef.current) return;
+      // Calculate width relative to the left edge of the pane, not the window
+      const leftEdge = leftPaneRef.current.getBoundingClientRect().left;
+      const newWidth = Math.max(200, Math.min(e.clientX - leftEdge, 800));
+      setLeftPaneWidth(newWidth);
+    };
+    
+    const handleMouseUp = () => {
+      if (isDraggingPane) setIsDraggingPane(false);
+    };
+
+    if (isDraggingPane) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+    } else {
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDraggingPane]);
+
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [statusRes, branchesRes, historyRes, tagsRes, remotesRes, stashesRes, stateRes, urlRes] = await Promise.all([
+      const [statusRes, branchesRes, historyResRaw, tagsRes, remotesRes, stashesRes, stateRes, urlRes] = await Promise.all([
         invoke<FileStatus[]>("git_status", { path: repoPath }),
         invoke<BranchInfo[]>("list_branches", { path: repoPath }),
-        invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: 0, searchQuery: debouncedQuery }),
+        invoke<HistoryResult>("get_history", { 
+          path: repoPath, limit: 50, skip: 0, searchQuery: debouncedQuery,
+          activeLanes: null, nextColorIdx: null, rowHeight: 48.0, columnWidth: 14.0
+        }),
         invoke<TagInfo[]>("list_tags", { path: repoPath }),
         invoke<RemoteInfo[]>("list_remotes", { path: repoPath }),
         invoke<StashInfo[]>("list_stashes", { path: repoPath }),
@@ -112,17 +152,20 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       
       setStatuses(statusRes);
       setBranches(branchesRes);
-      setCommits(historyRes);
+      setCommits(historyResRaw.commits);
+      setActiveLanes(historyResRaw.active_lanes);
+      setNextColorIdx(historyResRaw.next_color_idx);
+      setMaxColumns(historyResRaw.max_columns);
       setHistoryOffset(0);
-      setHasMoreHistory(historyRes.length === 50);
+      setHasMoreHistory(historyResRaw.commits.length === 50);
       setTags(tagsRes);
       setRemotes(remotesRes);
       setStashes(stashesRes);
       setRepoState(stateRes);
       
-      if (!activeRemote && remotesRes.length > 0) {
-        const origin = remotesRes.find(r => r.name === "origin");
-        setActiveRemote(origin ? origin.name : remotesRes[0].name);
+      if (!activeRemote && (remotesRes as RemoteInfo[]).length > 0) {
+        const origin = (remotesRes as RemoteInfo[]).find(r => r.name === "origin");
+        setActiveRemote(origin ? origin.name : (remotesRes as RemoteInfo[])[0].name);
       }
 
       let newOwnerRepo = null;
@@ -145,7 +188,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       }
       
       if (selectedFile) {
-        const stillExists = statusRes.find(s => s.file_path === selectedFile.path && 
+        const stillExists = (statusRes as FileStatus[]).find(s => s.file_path === selectedFile.path && 
           (selectedFile.isStaged ? s.is_staged : s.is_unstaged));
         if (!stillExists) {
           setSelectedFile(null);
@@ -166,11 +209,17 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     try {
       loadingMoreHistory.current = true;
       const nextOffset = historyOffset + 50;
-      const historyRes = await invoke<CommitInfo[]>("get_history", { path: repoPath, limit: 50, skip: nextOffset, searchQuery: debouncedQuery });
-      if (historyRes.length < 50) {
+      const historyResRaw = await invoke<HistoryResult>("get_history", { 
+        path: repoPath, limit: 50, skip: nextOffset, searchQuery: debouncedQuery,
+        activeLanes: activeLanes, nextColorIdx: nextColorIdx, rowHeight: 48.0, columnWidth: 14.0
+      });
+      if (historyResRaw.commits.length < 50) {
         setHasMoreHistory(false);
       }
-      setCommits(prev => [...prev, ...historyRes]);
+      setCommits(prev => [...prev, ...historyResRaw.commits]);
+      setActiveLanes(historyResRaw.active_lanes);
+      setNextColorIdx(historyResRaw.next_color_idx);
+      setMaxColumns(Math.max(maxColumns, historyResRaw.max_columns));
       setHistoryOffset(nextOffset);
     } catch (err) {
       setError(err as string);
@@ -265,6 +314,17 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
     try { await invoke("stage_all", { path: repoPath }); await loadData(); } catch (err) { setError(err as string); }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleStageAll();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [repoPath]);
+
   const handleUnstageAll = async () => {
     try { await invoke("unstage_all", { path: repoPath }); await loadData(); } catch (err) { setError(err as string); }
   };
@@ -317,7 +377,18 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       setLoading(true);
       await invoke("abort_merge", { path: repoPath });
       await loadData();
-    } catch (err) { setError(err as string); setLoading(false); }
+    } catch (err) { setError(err as string);      console.error(err);
+    }
+  };
+
+  const handleUndoCommit = async () => {
+    if (!repoPath) return;
+    try {
+      await invoke("undo_last_commit", { path: repoPath });
+      await loadData();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleStash = async () => {
@@ -385,6 +456,18 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       setError(err as string);
     } finally {
       setCommitDiffLoading(false);
+    }
+  };
+
+  const handleCherryPick = async (commitId: string) => {
+    if (!confirm(`Are you sure you want to cherry-pick commit ${commitId.substring(0, 7)} onto the current branch?`)) return;
+    try {
+      setLoading(true);
+      await invoke("cherry_pick_commit", { path: repoPath, commitId });
+      await loadData();
+    } catch (err) {
+      setError(err as string);
+      setLoading(false);
     }
   };
 
@@ -479,7 +562,11 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
         <AuthModal 
           pendingAction={pendingAction} pat={pat} setPat={setPat} 
           syncing={syncing} onCancel={() => setShowAuthModal(false)} 
-          onAuthenticate={executeNetworkAction} 
+          onAuthenticate={(action, token) => {
+            if (action !== "login") {
+              executeNetworkAction(action, token);
+            }
+          }} 
         />
       )}
 
@@ -509,6 +596,18 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
         <RemoteModal 
           repoPath={repoPath} remotes={remotes} 
           onClose={() => setShowRemoteModal(false)} onRefresh={loadData} 
+        />
+      )}
+
+      {showVisualRebaseModal && commits.length > 0 && (
+        <VisualRebaseModal 
+          repoPath={repoPath}
+          commits={commits.filter(c => c.parents && c.parents.length > 0).slice(0, Math.min(10, commits.length))}
+          onClose={() => setShowVisualRebaseModal(false)}
+          onSuccess={() => {
+            setShowVisualRebaseModal(false);
+            loadData();
+          }}
         />
       )}
 
@@ -561,7 +660,11 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
           ) : (
             <>
               {/* Left Rail */}
-              <div className="w-full md:w-80 flex flex-col gap-2 h-full">
+              <div 
+                ref={leftPaneRef}
+                className="flex flex-col gap-2 h-full flex-shrink-0"
+                style={{ width: `${leftPaneWidth}px`, maxWidth: '70vw' }}
+              >
                 {activeTab === "status" ? (
                   <StatusPanel 
                     stagedFiles={stagedFiles} unstagedFiles={unstagedFiles} stashes={stashes} 
@@ -572,7 +675,9 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                     onDiscard={handleDiscard} onIgnore={handleIgnore}
                     commitMessage={commitMessage} setCommitMessage={setCommitMessage}
                     isAmending={isAmending} setIsAmending={setIsAmending} headCommitMessage={commits[0]?.message || ""}
-                    onCommit={handleCommit} committing={committing}
+                    onCommit={handleCommit}
+                    onUndoCommit={handleUndoCommit}
+                    committing={committing}
                     onStash={handleStash} onStashApply={handleStashApply} 
                     onStashPop={handleStashPop} onStashDrop={handleStashDrop}
                     onAbortMerge={handleAbortMerge}
@@ -580,6 +685,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                 ) : (
                   <HistoryPanel 
                     commits={commits} 
+                    maxColumns={maxColumns}
                     searchQuery={searchQuery} 
                     setSearchQuery={setSearchQuery} 
                     selectedCommitId={selectedCommitId}
@@ -589,8 +695,17 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                     avatarsMap={avatarsMap}
                     ownerRepo={ownerRepo}
                     pat={pat}
+                    onVisualRebaseClick={() => setShowVisualRebaseModal(true)}
                   />
                 )}
+              </div>
+
+              {/* Resize Handle */}
+              <div 
+                className="w-2 cursor-col-resize hover:bg-chrome-indigo/30 transition-colors h-full flex-shrink-0 flex items-center justify-center -mx-1 z-10"
+                onMouseDown={() => setIsDraggingPane(true)}
+              >
+                <div className="w-0.5 h-8 bg-chrome-indigo/50 rounded-full"></div>
               </div>
 
               {/* Right Rail */}
@@ -604,6 +719,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                 onSelectCommitFile={handleSelectCommitFile}
                 onRefresh={loadData}
                 refreshCounter={refreshCounter}
+                onCherryPick={handleCherryPick}
               />
             </>
           )}
