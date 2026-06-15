@@ -8,6 +8,7 @@ import { check } from "@tauri-apps/plugin-updater";
 import HelpModal from "../components/Modals/HelpModal";
 import SettingsModal from "../components/Modals/SettingsModal";
 import UpdateModal from "../components/Modals/UpdateModal";
+import AuthModal from "../components/Modals/AuthModal";
 
 interface RecentRepo {
   id: number;
@@ -29,9 +30,10 @@ interface GithubRepository {
 interface HomeProps {
   onOpenRepo: (path: string) => void;
   pat: string;
+  setPat: (pat: string) => void;
 }
 
-export default function Home({ onOpenRepo, pat }: HomeProps) {
+export default function Home({ onOpenRepo, pat, setPat }: HomeProps) {
   const [error, setError] = useState<string | null>(null);
   const [cloneUrl, setCloneUrl] = useState("");
   const [isCloning, setIsCloning] = useState(false);
@@ -42,6 +44,7 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
   const [isCloudLoading, setIsCloudLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [updateData, setUpdateData] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     async function checkForUpdates() {
@@ -203,17 +206,17 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
       <header className="w-full max-w-4xl mb-8 flex flex-col sm:flex-row justify-between items-end sm:items-center">
         <div className="flex items-center gap-3">
           <div className="bg-surface rounded-full p-2 border-2 border-chrome-indigo shadow-[2px_2px_0px_rgba(61,79,151,1)]">
-            <FolderGit2 className="h-8 w-8 text-primary" />
+            <img src="/tyegit-logo.png" alt="TyeGit Logo" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <h1 className="text-4xl font-black text-white" style={{ WebkitTextStroke: '1.5px #3d4f97', textShadow: '3px 3px 0px #3d4f97' }}>
-              GIT DESKTOP
+              TYEGIT
             </h1>
           </div>
         </div>
         <div className="bg-surface px-4 py-2 rounded-lg border border-chrome-indigo shadow-md mt-4 sm:mt-0 relative">
           <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-surface border-b border-l border-chrome-indigo transform rotate-45"></div>
-          <p className="text-[10px] text-ink font-bold">Welcome to Git Desktop!</p>
+          <p className="text-[10px] text-ink font-bold">Welcome to TyeGit!</p>
         </div>
       </header>
 
@@ -248,6 +251,20 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
         {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} onUpdateFound={setUpdateData} />}
         {updateData && <UpdateModal update={updateData} onClose={() => setUpdateData(null)} />}
+        
+        {showAuthModal && (
+          <AuthModal 
+            pendingAction="login" 
+            pat={pat} 
+            setPat={setPat} 
+            syncing={false} 
+            onCancel={() => setShowAuthModal(false)} 
+            onAuthenticate={(action, token) => {
+              setShowAuthModal(false);
+              setPat(token);
+            }} 
+          />
+        )}
 
         {error && (
           <div className="mt-2 bg-white border border-primary p-2 text-primary font-bold text-xs shadow-sm">
@@ -345,7 +362,30 @@ export default function Home({ onOpenRepo, pat }: HomeProps) {
           <div className="w-full md:w-1/3 flex flex-col gap-4">
             
             {/* GitHub Cloud Section */}
-            {pat && (
+            {/* GitHub Cloud Section */}
+            {!pat ? (
+              <>
+                <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
+                  <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo w-full">
+                    <span className="ui-label text-ink flex items-center gap-2">
+                      <FolderGit2 className="w-3 h-3 text-nav-gold" /> GITHUB CLOUD
+                    </span>
+                  </div>
+                </div>
+                <div className="beveled-raised p-4 flex flex-col justify-center items-center min-h-[150px] bg-white mb-2">
+                  <p className="text-sm font-bold text-ink mb-2">Connect to GitHub</p>
+                  <p className="text-[10px] text-ink-soft mb-4 text-center">
+                    Sign in to seamlessly clone repositories and manage your GitHub Actions.
+                  </p>
+                  <button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-systems-teal text-white ui-label w-full py-2 rounded-xs beveled-chip flex items-center justify-center gap-2 shadow-sm hover:brightness-110 active:brightness-95"
+                  >
+                    LOGIN WITH GITHUB
+                  </button>
+                </div>
+              </>
+            ) : (
               <>
                 <div className="bg-canvas border border-chrome-indigo flex items-center bg-canvas-soft">
                   <div className="bg-canvas px-2 py-1 border-r border-chrome-indigo w-full">

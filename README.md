@@ -5,7 +5,7 @@
   <p><strong>The Git client that stays out of your way. Fast. Precise. Built in Rust.</strong></p>
 
   <p>
-    <img src="https://img.shields.io/badge/version-v2.2.4-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
+    <img src="https://img.shields.io/badge/version-v2.3.0-blue.svg?style=for-the-badge&color=B12A2A" alt="Version" />
     <img src="https://img.shields.io/badge/Rust-Native-orange.svg?style=for-the-badge&logo=rust&color=B12A2A" alt="Rust Native" />
     <img src="https://img.shields.io/badge/Tauri-Backend-yellow.svg?style=for-the-badge&logo=tauri&color=2B2A29" alt="Tauri Backend" />
     <img src="https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge&color=2B2A29" alt="License" />
@@ -26,7 +26,7 @@
   </p>
 </div>
 
-> ⚠️ **SECURITY ADVISORY:** Versions `v2.2.3` and below had a compromised auto-updater key accidentally leaked. **DO NOT** install or use them. Please only download and install `v2.2.4` or newer.
+> ⚠️ **SECURITY ADVISORY:** Versions `v2.2.3` and below had a compromised auto-updater key accidentally leaked. **DO NOT** install or use them. Please only download and install `v2.3.0` or newer.
 
 ---
 
@@ -40,12 +40,17 @@ We abandoned bulky Electron and Chromium layers to build a sleek **Rust + Tauri*
 
 ### 1. Surgical Precision
 Stage line-by-line or by hunk using our embedded "God-Mode" diff editor. Open the index, edit code directly before committing, and maintain total control over your Git history.
+If you made a mistake, instantly discard specific hunks using the **Revert Hunk** (`↺`) action directly from the margin.
 
 ### 2. Built-in Guardrails
 We enforce fast-forward pulls by default and prevent accidental merges into protected branches. If timelines collide, TyeGit enters a dedicated `MERGE` state, flagging conflicting files so you can resolve them before disaster strikes.
 
-### 3. Multi-Remote Mastery
+### 3. Multi-Remote Mastery & Global Login
 Manage upstream and origin effortlessly. Sync forks, push to multiple remotes, and track upstream branches with a single click. Authentic GitHub Device Flow authentication ensures secure, token-based network syncing.
+Simply login globally from the Home screen to securely access and 1-click clone all your remote repositories without opening a local project first.
+
+### 4. GitHub Actions Management
+A built-in GitHub dashboard allows you to fully manage your repository and environment **Secrets, Variables, and Environments** natively within TyeGit. Secrets are securely encrypted locally via `libsodium` before being pushed to GitHub.
 
 ## 📊 How We Compare
 

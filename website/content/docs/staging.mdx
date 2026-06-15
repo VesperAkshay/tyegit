@@ -18,12 +18,10 @@ With TyeGit, you can stage *only* the bug fix, commit it, and leave the experime
 ### Step 1: Open the Diff Viewer
 In the Left Rail (Status Panel), click on any Unstaged file that has been modified. The center pane will open the God-Mode Diff Viewer.
 
-### Step 2: Hunk Staging (The Arrows)
-In the center margin between the left and right panes, you will see `←` arrows pointing to the left.
-- **Left Pane**: Your Git Index (What is currently staged).
-- **Right Pane**: Your Working Directory (What is on your disk).
-
-Click an arrow to instantly copy that specific chunk of code from your Working Directory into your Git Index!
+### Step 2: Hunk Staging and Reverting (The Arrows)
+In the center margin between the left and right panes, you will see two arrows for every modified hunk:
+- **`←` (Blue)**: Stage Hunk. Instantly copies that specific chunk of code from your Working Directory into your Git Index.
+- **`↺` (Red)**: Revert Hunk. Surgically slices the pristine lines out of the Git Index and replaces your working directory modifications, allowing you to discard unwanted changes hunk-by-hunk.
 
 ### Step 3: Editable Index (Manual Staging)
 Sometimes an arrow isn't precise enough. Because the Left Pane is a real editor, you can literally click inside it and start typing! 

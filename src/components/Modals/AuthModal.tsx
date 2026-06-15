@@ -4,12 +4,12 @@ import { Key, RefreshCw, ExternalLink, AlertTriangle } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 interface AuthModalProps {
-  pendingAction: "push" | "pull" | "fetch" | null;
+  pendingAction: "push" | "pull" | "fetch" | "login" | null;
   pat: string;
   setPat: (pat: string) => void;
   syncing: boolean;
   onCancel: () => void;
-  onAuthenticate: (action: "push" | "pull" | "fetch", token: string) => void;
+  onAuthenticate: (action: "push" | "pull" | "fetch" | "login", token: string) => void;
 }
 
 interface DeviceCodeResponse {

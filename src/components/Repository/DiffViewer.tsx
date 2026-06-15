@@ -50,56 +50,144 @@ export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoad
   const decorationsCollectionRef = useRef<any>(null);
   const monaco = useMonaco();
 
-  const handleEditorMount = (editor: any) => {
+  const updateDecorations = (editor: any, monacoInstance: any) => {
+    const changes = editor.getLineChanges();
+    if (!changes) return;
+
+    const modifiedEditor = editor.getModifiedEditor();
+    
+    const newDecorations = changes.map((change: any) => {
+      let startLine = change.modifiedStartLineNumber;
+      if (startLine === 0) startLine = 1;
+
+      return {
+        range: new monacoInstance.Range(startLine, 1, startLine, 1),
+        options: {
+          isWholeLine: false,
+          glyphMarginClassName: 'custom-stage-arrow-glyph',
+          glyphMarginHoverMessage: { value: 'Undo (Revert Hunk)             Stage (Copy to Index)' }
+        }
+      };
+    });
+
+    if (!decorationsCollectionRef.current) {
+      decorationsCollectionRef.current = modifiedEditor.createDecorationsCollection(newDecorations);
+    } else {
+      decorationsCollectionRef.current.set(newDecorations);
+    }
+  };
+
+  const handleEditorMount = (editor: any, monacoInstance: any) => {
     diffEditorRef.current = editor;
+    decorationsCollectionRef.current = null; // Reset the collection on new mount!
 
     // Listen for diff updates to draw our custom arrows
     editor.onDidUpdateDiff(() => {
-      if (!monaco) return;
-      const changes = editor.getLineChanges();
-      if (!changes) return;
+      updateDecorations(editor, monacoInstance);
+    });
 
-      const modifiedEditor = editor.getModifiedEditor();
-      
-      // We will add decorations to the original editor (Left pane) margin
-      // wait, we want the arrow in the middle. The left margin of the Right pane is in the middle!
-      const newDecorations = changes.map((change: any) => {
-        const startLine = change.modifiedStartLineNumber > 0 ? change.modifiedStartLineNumber : 1;
-        return {
-          range: new monaco.Range(startLine, 1, startLine, 1),
-          options: {
-            isWholeLine: false,
-            glyphMarginClassName: 'custom-stage-arrow-glyph',
-            glyphMarginHoverMessage: { value: 'Stage this hunk (Copy to Index)' }
+    // Initial draw in case diff is already computed
+    updateDecorations(editor, monacoInstance);
+
+    // Add hover effects for the two pseudo-buttons
+    editor.getModifiedEditor().onMouseMove((e: any) => {
+      if (e.target.type === monacoInstance.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+        const element = e.target.element;
+        if (element && element.className.includes('custom-stage-arrow-glyph')) {
+          const offsetX = e.event.browserEvent.offsetX;
+          if (offsetX < 18) {
+            element.classList.add('hover-revert');
+            element.classList.remove('hover-stage');
+          } else {
+            element.classList.add('hover-stage');
+            element.classList.remove('hover-revert');
           }
-        };
-      });
+        }
+      }
+    });
 
-      if (!decorationsCollectionRef.current) {
-        decorationsCollectionRef.current = modifiedEditor.createDecorationsCollection(newDecorations);
-      } else {
-        decorationsCollectionRef.current.set(newDecorations);
+    editor.getModifiedEditor().onMouseLeave((e: any) => {
+      const element = e.target.element;
+      if (element && element.classList) {
+        element.classList.remove('hover-revert', 'hover-stage');
       }
     });
 
     // Listen for mouse clicks on our custom arrows
     editor.getModifiedEditor().onMouseDown((e: any) => {
-      if (e.target.type === monaco?.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+      if (e.target.type === monacoInstance.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
         const element = e.target.element;
         if (element && element.className.includes('custom-stage-arrow-glyph')) {
+          const offsetX = e.event.browserEvent.offsetX;
+          const isRevert = offsetX < 18;
+
           const lineNumber = e.target.position.lineNumber;
           const changes = editor.getLineChanges();
           if (!changes) return;
           
           const change = changes.find((c: any) => {
-            const startLine = c.modifiedStartLineNumber > 0 ? c.modifiedStartLineNumber : 1;
+            let startLine = c.modifiedStartLineNumber;
+            if (startLine === 0) startLine = 1;
             return Math.abs(startLine - lineNumber) <= 1; // fuzzy match
           });
 
-          if (change) stageHunk(change);
+          if (change) {
+            if (isRevert) {
+              revertHunk(change);
+            } else {
+              stageHunk(change);
+            }
+          }
         }
       }
     });
+  };
+
+  const revertHunk = async (change: any) => {
+    if (!diffEditorRef.current) return;
+    if (!confirm("Are you sure you want to discard changes for this hunk? This cannot be undone.")) return;
+
+    const originalModel = diffEditorRef.current.getOriginalEditor().getModel();
+    const modifiedModel = diffEditorRef.current.getModifiedEditor().getModel();
+
+    const originalLines = originalModel.getValue().split('\n');
+    const modifiedLines = modifiedModel.getValue().split('\n');
+
+    let origStart = change.originalStartLineNumber;
+    let origEnd = change.originalEndLineNumber;
+    let modStart = change.modifiedStartLineNumber;
+    let modEnd = change.modifiedEndLineNumber;
+
+    let linesToInsert: string[] = [];
+    if (origEnd >= origStart && origStart > 0) {
+      linesToInsert = originalLines.slice(origStart - 1, origEnd);
+    }
+
+    let replaceStartIdx = 0;
+    let deleteCount = 0;
+
+    if (modEnd >= modStart && modStart > 0) {
+      replaceStartIdx = modStart - 1;
+      deleteCount = modEnd - modStart + 1;
+    } else if (modStart > 0) {
+      replaceStartIdx = modStart;
+      deleteCount = 0;
+    }
+
+    modifiedLines.splice(replaceStartIdx, deleteCount, ...linesToInsert);
+    const newWorkingText = modifiedLines.join('\n');
+    
+    if (repoPath && selectedFile) {
+        setSaving(true);
+        try {
+            await invoke("save_working_file_from_text", { path: repoPath, filePath: selectedFile.path, text: newWorkingText });
+            onRefresh?.();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSaving(false);
+        }
+    }
   };
 
   const stageHunk = (change: any) => {
@@ -218,7 +306,7 @@ export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoad
               <div className="flex justify-between px-4 py-1 bg-platinum border-b border-chrome-indigo/30 text-[10px] font-bold text-ink-soft">
                 <div className="flex items-center gap-2">
                   <span className="bg-chrome-indigo text-white px-1.5 py-0.5 rounded-sm">INDEX (STAGED)</span>
-                  <span>EDITABLE - Use custom arrows to stage hunks</span>
+                  <span>EDITABLE - Use arrows to Revert or Stage hunks</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="bg-carbon text-white px-1.5 py-0.5 rounded-sm">WORKING DIRECTORY</span>
@@ -231,19 +319,36 @@ export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoad
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-start;
+                    overflow: visible !important;
+                    width: 40px !important;
+                  }
+                  .custom-stage-arrow-glyph::before {
+                    content: "↺";
+                    color: #ff4d4f;
+                    font-weight: bold;
+                    font-size: 14px;
+                    background: #e5e7eb;
+                    border-radius: 4px;
+                    padding: 0 2px;
+                    border: 1px solid #ff4d4f;
+                    margin-right: 4px;
                   }
                   .custom-stage-arrow-glyph::after {
                     content: "←";
                     color: #3d4f97;
                     font-weight: bold;
-                    font-size: 16px;
+                    font-size: 14px;
                     background: #e5e7eb;
                     border-radius: 4px;
                     padding: 0 2px;
                     border: 1px solid #3d4f97;
                   }
-                  .custom-stage-arrow-glyph:hover::after {
+                  .custom-stage-arrow-glyph.hover-revert::before {
+                    background: #ff4d4f;
+                    color: white;
+                  }
+                  .custom-stage-arrow-glyph.hover-stage::after {
                     background: #3d4f97;
                     color: white;
                   }

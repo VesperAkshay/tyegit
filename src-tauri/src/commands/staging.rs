@@ -96,3 +96,11 @@ pub fn stage_file_from_text(path: String, file_path: String, text: String) -> Re
         Err(e) => Err(format!("Failed to open repository: {}", e.message())),
     }
 }
+
+#[tauri::command]
+pub fn save_working_file_from_text(path: String, file_path: String, text: String) -> Result<(), String> {
+    let repo_path = PathBuf::from(&path);
+    let full_path = repo_path.join(&file_path);
+    std::fs::write(&full_path, text).map_err(|e| format!("Failed to save working file: {}", e))?;
+    Ok(())
+}

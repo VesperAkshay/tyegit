@@ -239,3 +239,433 @@ pub async fn publish_repository(name: String, description: String, private: bool
         Err(format!("Failed to publish repository: {}", res.status()))
     }
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubActor {
+    pub login: String,
+    pub avatar_url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubCommitShort {
+    pub message: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubWorkflowRun {
+    pub id: u64,
+    pub name: String,
+    pub head_branch: String,
+    pub run_number: u64,
+    pub status: String,
+    pub conclusion: Option<String>,
+    pub html_url: String,
+    pub created_at: String,
+    pub updated_at: String,
+    pub actor: Option<GithubActor>,
+    pub head_commit: Option<GithubCommitShort>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubActionRunsResponse {
+    pub total_count: u64,
+    pub workflow_runs: Vec<GithubWorkflowRun>,
+}
+
+#[tauri::command]
+pub async fn list_action_runs(owner: String, repo: String, token: String) -> Result<Vec<GithubWorkflowRun>, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/runs?per_page=30", owner, repo);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let data = res.json::<GithubActionRunsResponse>().await.map_err(|e| e.to_string())?;
+        Ok(data.workflow_runs)
+    } else {
+        Err(format!("Failed to fetch action runs: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn cancel_action_run(owner: String, repo: String, run_id: u64, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/runs/{}/cancel", owner, repo, run_id);
+    let res = client
+        .post(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 202 {
+        Ok(())
+    } else {
+        Err(format!("Failed to cancel run: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn rerun_action_run(owner: String, repo: String, run_id: u64, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/runs/{}/rerun", owner, repo, run_id);
+    let res = client
+        .post(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 201 {
+        Ok(())
+    } else {
+        Err(format!("Failed to rerun run: {}", res.status()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubSecret {
+    pub name: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubSecretsResponse {
+    pub total_count: u64,
+    pub secrets: Vec<GithubSecret>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubVariable {
+    pub name: String,
+    pub value: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubVariablesResponse {
+    pub total_count: u64,
+    pub variables: Vec<GithubVariable>,
+}
+
+#[tauri::command]
+pub async fn list_action_secrets(owner: String, repo: String, token: String) -> Result<Vec<GithubSecret>, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/secrets", owner, repo);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let data = res.json::<GithubSecretsResponse>().await.map_err(|e| e.to_string())?;
+        Ok(data.secrets)
+    } else {
+        Err(format!("Failed to fetch secrets: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn list_action_variables(owner: String, repo: String, token: String) -> Result<Vec<GithubVariable>, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/variables", owner, repo);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let data = res.json::<GithubVariablesResponse>().await.map_err(|e| e.to_string())?;
+        Ok(data.variables)
+    } else {
+        Err(format!("Failed to fetch variables: {}", res.status()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubEnvironment {
+    pub name: String,
+    pub updated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubEnvironmentsResponse {
+    pub total_count: u64,
+    pub environments: Vec<GithubEnvironment>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubJob {
+    pub id: u64,
+    pub name: String,
+    pub status: String,
+    pub conclusion: Option<String>,
+    pub started_at: String,
+    pub completed_at: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubJobsResponse {
+    pub total_count: u64,
+    pub jobs: Vec<GithubJob>,
+}
+
+#[tauri::command]
+pub async fn list_environments(owner: String, repo: String, token: String) -> Result<Vec<GithubEnvironment>, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/environments", owner, repo);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let data = res.json::<GithubEnvironmentsResponse>().await.map_err(|e| e.to_string())?;
+        Ok(data.environments)
+    } else {
+        Err(format!("Failed to fetch environments: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn list_action_jobs(owner: String, repo: String, run_id: u64, token: String) -> Result<Vec<GithubJob>, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/runs/{}/jobs", owner, repo, run_id);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let data = res.json::<GithubJobsResponse>().await.map_err(|e| e.to_string())?;
+        Ok(data.jobs)
+    } else {
+        Err(format!("Failed to fetch jobs: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn get_job_logs(owner: String, repo: String, job_id: u64, token: String) -> Result<String, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/jobs/{}/logs", owner, repo, job_id);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let logs = res.text().await.map_err(|e| e.to_string())?;
+        Ok(logs)
+    } else {
+        Err(format!("Failed to fetch job logs: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn create_environment(owner: String, repo: String, env_name: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/environments/{}", owner, repo, env_name);
+    let res = client
+        .put(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 200 {
+        Ok(())
+    } else {
+        Err(format!("Failed to create environment: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn delete_environment(owner: String, repo: String, env_name: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/environments/{}", owner, repo, env_name);
+    let res = client
+        .delete(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 204 {
+        Ok(())
+    } else {
+        Err(format!("Failed to delete environment: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn create_variable(owner: String, repo: String, name: String, value: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/variables", owner, repo);
+    let body = serde_json::json!({ "name": name, "value": value });
+    let res = client
+        .post(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 201 {
+        Ok(())
+    } else {
+        Err(format!("Failed to create variable: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn update_variable(owner: String, repo: String, name: String, value: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/variables/{}", owner, repo, name);
+    let body = serde_json::json!({ "name": name, "value": value });
+    let res = client
+        .patch(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 204 {
+        Ok(())
+    } else {
+        Err(format!("Failed to update variable: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn delete_variable(owner: String, repo: String, name: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/variables/{}", owner, repo, name);
+    let res = client
+        .delete(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 204 {
+        Ok(())
+    } else {
+        Err(format!("Failed to delete variable: {}", res.status()))
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GithubPublicKey {
+    pub key_id: String,
+    pub key: String,
+}
+
+#[tauri::command]
+pub async fn get_repo_public_key(owner: String, repo: String, token: String) -> Result<GithubPublicKey, String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/secrets/public-key", owner, repo);
+    let res = client
+        .get(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() {
+        let pk = res.json::<GithubPublicKey>().await.map_err(|e| e.to_string())?;
+        Ok(pk)
+    } else {
+        Err(format!("Failed to fetch public key: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn put_action_secret(owner: String, repo: String, name: String, encrypted_value: String, key_id: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/secrets/{}", owner, repo, name);
+    let body = serde_json::json!({ "encrypted_value": encrypted_value, "key_id": key_id });
+    let res = client
+        .put(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 201 || res.status().as_u16() == 204 {
+        Ok(())
+    } else {
+        Err(format!("Failed to put secret: {}", res.status()))
+    }
+}
+
+#[tauri::command]
+pub async fn delete_action_secret(owner: String, repo: String, name: String, token: String) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let url = format!("https://api.github.com/repos/{}/{}/actions/secrets/{}", owner, repo, name);
+    let res = client
+        .delete(&url)
+        .header(USER_AGENT, "tyegit")
+        .header(AUTHORIZATION, format!("Bearer {}", token))
+        .header(ACCEPT, "application/vnd.github.v3+json")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if res.status().is_success() || res.status().as_u16() == 204 {
+        Ok(())
+    } else {
+        Err(format!("Failed to delete secret: {}", res.status()))
+    }
+}
+
+
+
+

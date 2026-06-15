@@ -1,0 +1,23 @@
+---
+title: GitHub Actions
+description: Seamlessly manage GitHub Environments, Secrets, and Variables.
+---
+
+## The GitHub Tab
+
+When you open a local repository that is synced with GitHub, a new **GITHUB** tab becomes available in the top navigation bar.
+
+This dedicated panel allows you to manage the infrastructure of your GitHub Actions directly from TyeGit, without ever needing to open the GitHub web dashboard!
+
+### 1. Environments
+Create, view, and delete Deployment Environments. These are essential for managing staged deployments and environment-specific secrets for your CI/CD pipelines.
+
+### 2. Secrets Management
+Securely manage both Repository and Environment secrets. 
+TyeGit uses the native `libsodium-wrappers` cryptography library to securely encrypt your secrets locally using the `crypto_box_seal` algorithm with your repository's public key before transmitting them to GitHub, ensuring maximum security.
+
+### 3. Variables
+Manage non-sensitive configuration variables for your workflows. You can easily add, edit, or delete variables for the repository or specific environments.
+
+## Future Plans
+In the future, this tab will expand to include full Monaco-powered YAML authoring for `.github/workflows` with native schema validation, and real-time viewing of action runner logs!
