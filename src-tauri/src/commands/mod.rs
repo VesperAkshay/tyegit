@@ -8,4 +8,6 @@ pub mod tag;
 pub mod stash;
 pub mod merge;
 pub mod rebase;
+pub mod ai;
 pub mod auth;
+pub mod agent;

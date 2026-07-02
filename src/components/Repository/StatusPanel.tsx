@@ -1,4 +1,4 @@
-import { Plus, Minus, ArchiveRestore, Trash2, DownloadCloud, AlertTriangle, Undo2, CheckCircle } from "lucide-react";
+import { Plus, Minus, ArchiveRestore, Trash2, DownloadCloud, AlertTriangle, Undo2, CheckCircle, Sparkles } from "lucide-react";
 import { FileStatus, StashInfo, RepositoryState, MergeStatus } from "../../types";
 
 interface StatusPanelProps {
@@ -28,6 +28,10 @@ interface StatusPanelProps {
   onStashPop: (index: number) => void;
   onStashDrop: (index: number) => void;
   onAbortMerge: () => void;
+  onGenerateMessage: () => Promise<void>;
+  generatingMsg: boolean;
+  onAiReview: () => void;
+  onAiResolve: (filePath: string) => void;
 }
 
 const StatusBadge = ({ file }: { file: FileStatus }) => {
@@ -57,7 +61,8 @@ export default function StatusPanel({
   stagedFiles, unstagedFiles, stashes, repoState, mergeStatus, selectedFile, onSelectFile,
   onStage, onUnstage, onStageAll, onUnstageAll, onDiscard, onIgnore,
   commitMessage, setCommitMessage, isAmending, setIsAmending, headCommitMessage, onCommit, onUndoCommit, committing,
-  onStash, onStashApply, onStashPop, onStashDrop, onAbortMerge
+  onStash, onStashApply, onStashPop, onStashDrop, onAbortMerge, onGenerateMessage, generatingMsg, onAiReview,
+  onAiResolve
 }: StatusPanelProps) {
   return (
     <div className="flex flex-col h-full gap-2 overflow-hidden">
@@ -135,14 +140,25 @@ export default function StatusPanel({
                     <span className="truncate">{file.file_path}</span>
                   </div>
                   <div className="flex items-center shrink-0">
+                    {file.is_conflicted && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onAiResolve(file.file_path); }} 
+                        className="text-[10px] font-bold text-systems-cyan hover:bg-systems-cyan/10 px-1.5 py-0.5 rounded mr-1 flex items-center gap-1 transition-colors"
+                        title="Auto-resolve conflict with AI"
+                      >
+                        <Sparkles className="w-3 h-3" /> AI RESOLVE
+                      </button>
+                    )}
                     {(file.status.includes("Untracked")) && (
                       <button onClick={(e) => onIgnore(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-nav-gold hover:bg-nav-gold/10 p-0.5 rounded ml-1" title="Add to .gitignore">
                         <ArchiveRestore className="w-3 h-3" />
                       </button>
                     )}
-                    <button onClick={(e) => onDiscard(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-1" title="Discard Changes">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    {!file.is_conflicted && (
+                      <button onClick={(e) => onDiscard(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-primary hover:bg-primary/10 p-0.5 rounded ml-1" title="Discard Changes">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
                     <button onClick={(e) => onStage(file.file_path, e)} className="shrink-0 text-ink-soft hover:text-systems-teal hover:bg-systems-teal/10 p-0.5 rounded ml-1" title="Stage File">
                       <Plus className="w-3 h-3" />
                     </button>
@@ -198,23 +214,47 @@ export default function StatusPanel({
             }
           }}
         />
-        <div className="flex items-center gap-2 mb-2 px-1">
-          <input 
-            type="checkbox" 
-            id="amendCheck" 
-            checked={isAmending} 
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setIsAmending(checked);
-              if (checked && !commitMessage.trim()) {
-                setCommitMessage(headCommitMessage);
-              }
-            }} 
-            className="w-3 h-3 accent-systems-teal"
-          />
-          <label htmlFor="amendCheck" className="text-[10px] font-bold text-ink-soft cursor-pointer select-none">
-            AMEND LAST COMMIT
-          </label>
+        <div className="flex items-center justify-between mb-2 px-1">
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              id="amendCheck" 
+              checked={isAmending} 
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsAmending(checked);
+                if (checked && !commitMessage.trim()) {
+                  setCommitMessage(headCommitMessage);
+                }
+              }} 
+              className="w-3 h-3 accent-systems-teal"
+            />
+            <label htmlFor="amendCheck" className="text-[10px] font-bold text-ink-soft cursor-pointer select-none">
+              AMEND LAST COMMIT
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              onClick={onAiReview}
+              disabled={stagedFiles.length === 0}
+              className="text-[10px] font-bold text-systems-cyan flex items-center gap-1 hover:bg-systems-cyan/10 px-2 py-1 rounded transition-colors disabled:opacity-50"
+              title="Review staged changes with AI"
+            >
+              <Sparkles className="w-3 h-3" />
+              REVIEW
+            </button>
+            <button 
+              onClick={onGenerateMessage}
+              disabled={generatingMsg || stagedFiles.length === 0}
+              className="text-[10px] font-bold text-systems-teal flex items-center gap-1 hover:bg-systems-teal/10 px-2 py-1 rounded transition-colors disabled:opacity-50"
+              title="Auto-generate commit message with AI"
+            >
+              {generatingMsg ? <span className="animate-pulse">GENERATING...</span> : <>
+                <Sparkles className="w-3 h-3" />
+                AI COMMIT
+              </>}
+            </button>
+          </div>
         </div>
         <div className="flex gap-2">
           <button 

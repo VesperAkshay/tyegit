@@ -18,14 +18,46 @@ pub fn unstage_file(repo: &Repository, path: &str) -> Result<(), git2::Error> {
 
 pub fn stage_all(repo: &Repository) -> Result<(), git2::Error> {
     let mut index = repo.index()?;
-    index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)?;
+    
+    // First try standard add_all
+    if let Err(_) = index.add_all(["*"], git2::IndexAddOption::DEFAULT, None) {
+        // Fallback to manual staging if git2 pathspec fails
+        let mut opts = git2::StatusOptions::new();
+        opts.include_untracked(true).recurse_untracked_dirs(true);
+        let statuses = repo.statuses(Some(&mut opts))?;
+        for entry in statuses.iter() {
+            if let Some(path) = entry.path() {
+                let status = entry.status();
+                if status.contains(git2::Status::WT_DELETED) {
+                    let _ = index.remove_path(Path::new(path));
+                } else {
+                    let _ = index.add_path(Path::new(path));
+                }
+            }
+        }
+    } else {
+        // Handle deletions
+        let _ = index.update_all(["*"], None);
+    }
+    
     index.write()?;
     Ok(())
 }
 
 pub fn unstage_all(repo: &Repository) -> Result<(), git2::Error> {
-    let head = repo.head()?.peel_to_commit()?;
-    repo.reset_default(Some(head.as_object()), ["*"])?;
+    match repo.head() {
+        Ok(head) => {
+            // If HEAD exists, a Mixed reset unstages everything
+            let commit = head.peel_to_commit()?;
+            repo.reset(commit.as_object(), git2::ResetType::Mixed, None)?;
+        }
+        Err(_) => {
+            // If there's no HEAD (initial commit), just clear the index
+            let mut index = repo.index()?;
+            index.clear()?;
+            index.write()?;
+        }
+    }
     Ok(())
 }
 

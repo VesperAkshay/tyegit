@@ -122,3 +122,10 @@ export interface ValidationResult {
   conflict_commit: string | null;
   new_head_oid: string | null;
 }
+
+export interface AiSettings {
+  provider: string;
+  model: string;
+  api_key: string;
+  base_url: string;
+}

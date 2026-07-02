@@ -101,7 +101,17 @@ pub fn run() {
             commands::merge::abort_merge,
             commands::merge::get_merge_status,
             commands::rebase::validate_visual_rebase,
-            commands::rebase::apply_visual_rebase
+            commands::rebase::apply_visual_rebase,
+            commands::ai::get_ai_settings,
+            commands::ai::save_ai_settings,
+            commands::ai::generate_commit_message,
+            commands::ai::generate_code_review,
+            commands::ai::resolve_conflict,
+            commands::agent::start_agent_session,
+            commands::agent::list_agent_sessions,
+            commands::agent::load_agent_session,
+            commands::agent::delete_agent_session,
+            commands::agent::execute_agent_tool
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

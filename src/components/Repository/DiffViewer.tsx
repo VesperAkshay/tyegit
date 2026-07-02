@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { RefreshCw, FileCode2, History, Save } from "lucide-react";
+import { RefreshCw, FileCode2, History, Save, Sparkles } from "lucide-react";
 import { DiffEditor } from "@monaco-editor/react";
 
 import { CommitDetails } from "../../types";
@@ -17,9 +17,10 @@ interface DiffViewerProps {
   onRefresh?: () => void;
   refreshCounter?: number;
   onCherryPick?: (commitId: string) => void;
+  onAiReviewCommit?: (commitId: string) => void;
 }
 
-export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoading, diffText, commitDetails, selectedCommitFile, onSelectCommitFile, onRefresh, refreshCounter, onCherryPick }: DiffViewerProps) {
+export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoading, diffText, commitDetails, selectedCommitFile, onSelectCommitFile, onRefresh, refreshCounter = 0, onCherryPick, onAiReviewCommit }: DiffViewerProps) {
   
   const [indexContent, setIndexContent] = useState("");
   const [workingContent, setWorkingContent] = useState("");
@@ -400,6 +401,15 @@ export default function DiffViewer({ repoPath, activeTab, selectedFile, diffLoad
                     <span>{commitDetails.info.author_name} &lt;{commitDetails.info.author_email}&gt;</span>
                     <div className="flex items-center gap-3">
                       <span className="font-mono bg-platinum px-1 py-0.5 rounded border border-carbon/20">{commitDetails.info.id.substring(0, 7)}</span>
+                      {onAiReviewCommit && (
+                        <button 
+                          onClick={() => onAiReviewCommit(commitDetails.info.id)}
+                          className="px-2 py-0.5 font-bold bg-systems-cyan text-white hover:bg-opacity-90 active:translate-y-px text-[9px] shadow-[1px_1px_0px_rgba(33,36,46,1)] active:shadow-none border border-carbon whitespace-nowrap flex items-center gap-1"
+                          title="Generate an AI Code Review for this commit"
+                        >
+                          <Sparkles className="w-3 h-3" /> AI REVIEW
+                        </button>
+                      )}
                       {onCherryPick && (
                         <button 
                           onClick={() => onCherryPick(commitDetails.info.id)}

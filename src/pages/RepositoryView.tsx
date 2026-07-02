@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { History } from "lucide-react";
 
 import { FileStatus, CommitInfo, BranchInfo, TagInfo, StashInfo, RepositoryState, MergeStatus, CommitDetails, RemoteInfo, HistoryResult, LaneInfo } from "../types";
@@ -11,6 +12,7 @@ import MergeModal from "../components/Modals/MergeModal";
 import RemoteModal from "../components/Modals/RemoteModal";
 import VisualRebaseModal from "../components/Modals/VisualRebaseModal";
 import RepositoryHeader from "../components/Repository/RepositoryHeader";
+import AgentChatPanel from "../components/Agent/AgentChatPanel";
 import StatusPanel from "../components/Repository/StatusPanel";
 import HistoryPanel from "../components/Repository/HistoryPanel";
 import DiffViewer from "../components/Repository/DiffViewer";
@@ -67,6 +69,8 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<"push" | "pull" | "fetch" | null>(null);
   const [syncing, setSyncing] = useState(false);
+
+  const [generatingMsg, setGeneratingMsg] = useState(false);
 
   // Modals state
   const [showNewBranch, setShowNewBranch] = useState(false);
@@ -421,7 +425,64 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
       setLoading(true);
       await invoke("stash_drop", { path: repoPath, index });
       await loadData();
-    } catch (err) { setError(err as string); setLoading(false); }
+    } catch (err) { setError(err as string); setLoading(false);    }
+  };
+
+  const handleGenerateMessage = async () => {
+    const stagedFiles = statuses.filter(s => s.is_staged);
+    if (stagedFiles.length === 0) return;
+    
+    setGeneratingMsg(true);
+    try {
+      const diffs = await Promise.all(stagedFiles.map(f => 
+        invoke<string>("get_file_diff", { path: repoPath, filePath: f.file_path, isStaged: true })
+      ));
+      const fullDiff = diffs.join("\n\n");
+      const generatedMsg = await invoke<string>("generate_commit_message", { repoPath, diffText: fullDiff });
+      setCommitMessage(generatedMsg);
+    } catch (e) {
+      console.error(e);
+      setError(`Failed to generate commit message: ${e}`);
+    } finally {
+      setGeneratingMsg(false);
+    }
+  };
+
+  const handleReviewStagedChanges = async () => {
+    const stagedFiles = statuses.filter(s => s.is_staged);
+    if (stagedFiles.length === 0) return;
+    try {
+      const diffs = await Promise.all(stagedFiles.map(f => 
+        invoke<string>("get_file_diff", { path: repoPath, filePath: f.file_path, isStaged: true })
+      ));
+      const fullDiff = diffs.join("\n\n");
+      emit("open-agent-chat", { prompt: "Please perform a comprehensive code review of the following staged changes:\n\n" + fullDiff });
+    } catch (e) {
+      console.error(e);
+      setError(`Failed to fetch diffs for review: ${e}`);
+    }
+  };
+
+  const handleReviewCommit = async (commitId: string) => {
+    if (!commitDetails) return;
+    try {
+      const diffs = await Promise.all(commitDetails.files_changed.map(f => 
+        invoke<string>("get_commit_file_diff", { 
+          path: repoPath, 
+          commitId, 
+          filePath: f.file_path 
+        })
+      ));
+      const fullDiff = diffs.join("\n\n");
+      emit("open-agent-chat", { prompt: `Please perform a comprehensive code review of commit ${commitId}:\n\n` + fullDiff });
+    } catch (e) {
+      console.error(e);
+      setError(`Failed to fetch commit diffs for review: ${e}`);
+    }
+  };
+
+  const handleAiResolve = async (filePath: string) => {
+    emit("open-agent-chat", { prompt: `There is a git merge conflict in the file '${filePath}'. Please analyze the conflict and resolve it for me.` });
   };
 
   const handleSelectCommit = async (commitId: string) => {
@@ -606,10 +667,11 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
           onClose={() => setShowVisualRebaseModal(false)}
           onSuccess={() => {
             setShowVisualRebaseModal(false);
-            loadData();
           }}
         />
       )}
+
+      <AgentChatPanel repoPath={repoPath} />
 
       <div className="w-full max-w-6xl flex flex-col">
         <RepositoryHeader 
@@ -681,6 +743,10 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                     onStash={handleStash} onStashApply={handleStashApply} 
                     onStashPop={handleStashPop} onStashDrop={handleStashDrop}
                     onAbortMerge={handleAbortMerge}
+                    onGenerateMessage={handleGenerateMessage}
+                    generatingMsg={generatingMsg}
+                    onAiReview={handleReviewStagedChanges}
+                    onAiResolve={handleAiResolve}
                   />
                 ) : (
                   <HistoryPanel 
@@ -720,6 +786,7 @@ export default function RepositoryView({ repoPath, onClose, pat, setPat }: Repos
                 onRefresh={loadData}
                 refreshCounter={refreshCounter}
                 onCherryPick={handleCherryPick}
+                onAiReviewCommit={handleReviewCommit}
               />
             </>
           )}
